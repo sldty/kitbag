@@ -10,4 +10,5 @@ edition = "2018"
 serde = { version = "1.0", features = ["derive"] }
 rmp-serde = "0.14"
 typetag = "0.1"
+rand = "0.7"
 sha3 = "0.9"

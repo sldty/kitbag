@@ -1,13 +1,15 @@
 use serde::{Serialize, Deserialize};
-use crate::traits::{Storable, Identity};
+use crate::{namespace::Namespace, traits::{Storable, Identity}};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Page {
-    // namespace: Namespace,
-    identity: Identity,
-    parent:   Identity,
-    title:    String,
-    branches: Vec<Identity>,
+    namespace: Namespace,
+    identity:  Identity, // Page
+    parent:    Identity, // Page
+    title:     String,
+    // TODO: move branches to datastore?
+    // Have datastore be the base identity?
+    // branches:  Vec<Identity<Branch>>,
 }
 
 #[typetag::serde]
