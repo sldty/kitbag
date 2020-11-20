@@ -25,3 +25,13 @@ impl Page {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PageDiff {}
+
+impl PageDiff {
+    pub fn make(prev: &Page, next: &Page) -> PageDiff {
+        todo!()
+    }
+
+    pub fn apply(&self, prev: &Page) -> Page {
+        todo!()
+    }
+}

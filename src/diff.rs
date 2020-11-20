@@ -7,6 +7,16 @@ use crate::{
     storable::Storable
 };
 
+// Just a word of warning:
+// I tried a lot to make traits work for this project.
+// But after hitting a lot of dead ends,
+// I realized that they, aside from technical reasons,
+// were *very* hard to get working as intended,
+// especiall with serde, typetag, and ownership tossed into the mix.
+// If you honestly think you can refactor this
+// to use traits in an elegant manner, be my guest.
+// For now, I find this to work just as well.
+
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Diff {
     Agent(AgentDiff),
@@ -29,12 +39,12 @@ impl Diff {
 
     fn apply(tip: &Storable, diff: &Diff) -> Option<Storable> {
         use Storable::*;
-        match (tip, diff) {
-            ( Agent(s),     Diff::Agent(d)     ) => d.apply(s),
-            ( Namespace(s), Diff::Namespace(d) ) => d.apply(s),
-            ( Page(s),      Diff::Page(d)      ) => d.apply(s),
+        let applied: Storable = match (tip, diff) {
+            ( Agent(s),     Diff::Agent(d)     ) => Agent(d.apply(s)),
+            ( Namespace(s), Diff::Namespace(d) ) => Namespace(d.apply(s)),
+            ( Page(s),      Diff::Page(d)      ) => Page(d.apply(s)),
             _ => return None,
-        }
-        todo!()
+        };
+        return Some(applied);
     }
 }

@@ -26,3 +26,13 @@ impl Agent {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AgentDiff {}
+
+impl AgentDiff {
+    pub fn make(prev: &Agent, next: &Agent) -> AgentDiff {
+        todo!()
+    }
+
+    pub fn apply(&self, prev: &Agent) -> Agent {
+        todo!()
+    }
+}

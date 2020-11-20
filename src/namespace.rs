@@ -30,3 +30,13 @@ impl Namespace {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NamespaceDiff {}
+
+impl NamespaceDiff {
+    pub fn make(prev: &Namespace, next: &Namespace) -> NamespaceDiff {
+        todo!()
+    }
+
+    pub fn apply(&self, prev: &Namespace) -> Namespace {
+        todo!()
+    }
+}
