@@ -25,7 +25,7 @@ pub enum Diff {
 }
 
 impl Diff {
-    fn make(prev: &Storable, next: &Storable) -> Option<Diff> {
+    pub fn make(prev: &Storable, next: &Storable) -> Option<Diff> {
         use Storable::*;
         if prev.identity() != next.identity() { return None; }
         let diff: Diff = match (prev, next) {
@@ -37,7 +37,7 @@ impl Diff {
         return Some(diff);
     }
 
-    fn apply(tip: &Storable, diff: &Diff) -> Option<Storable> {
+    pub fn apply(tip: &Storable, diff: &Diff) -> Option<Storable> {
         use Storable::*;
         let applied: Storable = match (tip, diff) {
             ( Agent(s),     Diff::Agent(d)     ) => Agent(d.apply(s)),

@@ -20,30 +20,42 @@ use crate::{
 /// The second part is a tree of identities.
 /// This is built out in-memory, from the relations contained from the content-addressed code.
 pub struct Datastore {
-    path:              PathBuf,
-    local_branch:      Branch,
-    other_branches:    Vec<Branch>,
-    // TODO: maybe blob type?
-    cached_addresses:  HashMap<Address, Vec<u8>>,
+    /// The identity of the local branch.
+    local: Branch,
+    // /// Map branch identity to branches.
+    // branches: HashMap<Identity, Branch>,
+    // TODO: build directory hiererchy to aviod rewriting whole datastore.
+    /// The write-path of this database.
+    path: PathBuf,
+    /// Recently accessed addresses for increased efficiency.
+    cache: HashMap<Address, Vec<u8>>,
 }
 
 impl Datastore {
     fn load(&self, address: &Address) -> Option<Storable> {
-        let serialized = self.cached_addresses.get(address)?;
+        // TODO: schedule on network if not in cache?
+        let serialized = self.cache.get(address)?;
         let object = rmp_serde::from_slice(serialized).ok()?;
         return Some(object);
     }
 
-    fn store(&mut self, storable: &Storable) -> Option<Address> {
+    // TODO: move to address?
+    fn stamp(storable: &Storable) -> Option<(Address, Vec<u8>)> {
         let serialized = rmp_serde::to_vec(storable).ok()?;
-        let address    = Address::new(&serialized);
-        // TODO: store address permanently?
-        self.cached_addresses.insert(address.clone(), serialized);
+        return Some((Address::new(&serialized), serialized));
+    }
+
+    fn store(&mut self, storable: &Storable) -> Option<Address> {
+        let (address, serialized) = Datastore::stamp(storable)?;
+        self.cache.insert(address.clone(), serialized);
         return Some(address);
     }
 
     // TODO: commit
+    // NOTE: just local for now!
     pub fn update(&mut self, storable: &Storable) -> Option<()> {
+        let address = self.store(storable)?;
+        self.local.update(storable)?;
         todo!()
     }
 
@@ -79,13 +91,23 @@ impl Branch {
         }
     }
 
-    pub fn update(&mut self, identity: &Storable) -> Option<()> {
+    // pub fn head(&self, storable: &Storable) -> Option<&Delta> {
+    //
+    // }
+
+    pub fn history(&self, storable: &Storable) -> Option<&History> {
+        self.histories.get(&storable.identity())
+    }
+
+    pub fn update(&mut self, storable: &Storable) -> Option<()> {
+        let history = self.histories.get(&storable.identity())?;
+
         // find the right history
         // commit in the history
         todo!()
     }
 
-    pub fn register(&mut self, identity: &Storable) -> Option<()> {
+    pub fn register(&mut self, storable: &Storable) -> Option<()> {
         todo!()
     }
 }
@@ -102,10 +124,12 @@ impl History {
     /// Create a new history.
     pub fn new(initial: Delta) -> History {
         match initial {
-            Delta::Base { checksum, .. } => {
+            Delta::Base { ref checksum, .. } => {
                 let mut deltas = HashMap::new();
-                deltas.insert(checksum, initial);
-                return History { head: checksum, deltas };
+                let ck = checksum.clone();
+                deltas.insert(ck.clone(), initial);
+                // build a
+                return History { head: ck, deltas };
             },
             Delta::Tip { .. } => unreachable!(),
         }
@@ -116,10 +140,11 @@ impl History {
     /// Panics if it is passed a base delta, which should be unreachable.
     pub fn commit(&mut self, delta: Delta) -> Option<()> {
         match delta {
-            Delta::Tip { previous, difference, checksum } => {
-                if previous != self.head { return None; }
-                self.deltas.insert(checksum, delta);
-                self.head = checksum
+            Delta::Tip { ref previous, ref checksum, .. } => {
+                if previous != &self.head { return None; }
+                let ck = checksum.clone();
+                self.deltas.insert(ck.clone(), delta);
+                self.head = ck
             }
             // a history can only have one base,
             // and that base in genned at the start.
@@ -133,6 +158,8 @@ impl History {
     //     return Some(delta);
     // }
 }
+
+// TODO: make deltas storable so that they can be resolved!
 
 pub enum Delta {
     /// The initial version, to which all changes are applied.
@@ -158,5 +185,20 @@ impl Delta {
     pub fn new(previous: &Storable, next: &Storable) -> Delta {
         // calculate the diffs and addresses
         todo!()
+    }
+
+    pub fn resolve(&self, history: &History, datastore: &Datastore) -> Option<Storable> {
+        // todo!();
+        match self {
+            Delta::Base { base, .. } => Some(base.clone()),
+            Delta::Tip  { previous, difference, checksum } => {
+                // TODO: check datastore cache, then history.
+                let prev_storable = datastore.resolve(previous);
+                let next_storable = Diff::apply(prev_storable, difference)?;
+                // check the checksum
+                if &Datastore::stamp(&next_storable)?.0 != checksum { return None; }
+                return Some(next_storable)
+            }
+        }
     }
 }

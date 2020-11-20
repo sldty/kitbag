@@ -40,7 +40,7 @@ impl Storable {
     pub fn context(&self) -> Option<Storable> {
         use Storable::*;
         let context = match self {
-            Agent(a)     => return None,
+            Agent(_)     => return None,
             Namespace(n) => Agent(n.context()),
             Page(p)      => Namespace(p.context()),
         };
@@ -54,7 +54,7 @@ impl Storable {
         let found = match self {
             Storable::Agent(a)     => Namespace(a.find(identity)?),
             Storable::Namespace(n) => Page(n.find(identity)?),
-            Storable::Page(p)      => return None,
+            Storable::Page(_)      => return None,
         };
         return Some(found);
     }
