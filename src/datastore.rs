@@ -24,10 +24,17 @@ pub struct Datastore {
     cached_addresses:  HashMap<Address, Vec<u8>>,
 }
 
-// pub struct Branch {
-//     owner: Agent,
-// }
-//
+/// Represents a single chain of versions.
+/// Note that this is not quite the same as a git branch, for instance.
+/// Each branch is expected to have one clear owner per node,
+/// i.e. all well-formed writes to a branch should succeed.
+/// There's some nuance, here, but the idea is for this to work in a local-first manner.
+/// Everyone has a local branch that only they can write to,
+/// And changes are synced by automatically merging when no conflicts are present.
+/// Conflicts are highlighted, and can be manually resolved.
+/// Once they've been resolved, changes should automatically propogate across branches.
+pub struct Branch {}
+
 // impl Branch {
 //     pub fn head(&self, identity: &Identity) -> Option<Address> {
 //         let versions = self.cached_identities.get(&identity)?;
