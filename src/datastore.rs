@@ -18,30 +18,30 @@ use crate::{
 pub struct Datastore {
     path:              PathBuf,
     local_branch:      Branch,
-    cached_branches:   Vec<Branch>,
+    other_branches:    Vec<Branch>,
     // TODO: maybe blob type?
     cached_addresses:  HashMap<Address, Vec<u8>>,
 }
 
-pub struct Branch {
-    owner:             Agent,
-    cached_identities: HashMap<Identity, Vec<Address>>
-}
+// pub struct Branch {
+//     owner: Agent,
+// }
+//
+// impl Branch {
+//     pub fn head(&self, identity: &Identity) -> Option<Address> {
+//         let versions = self.cached_identities.get(&identity)?;
+//         if versions.is_empty() { return None; }
+//         return Some(versions[versions.len() - 1].clone().current);
+//     }
+//
+//     pub fn commit(&mut self, identity: &Identity, address: &Address) -> Option<()> {
+//         let addresses = self.cached_identities.get_mut(&identity)?;
+//         addresses.push(address.clone());
+//         Some(())
+//     }
+// }
 
-impl Branch {
-    pub fn head(&self, identity: &Identity) -> Option<Address> {
-        let versions = self.cached_identities.get(&identity)?;
-        if versions.is_empty() { return None; }
-        return Some(versions[versions.len() - 1].clone());
-    }
-
-    pub fn commit(&mut self, identity: &Identity, address: &Address) -> Option<()> {
-        let addresses = self.cached_identities.get_mut(&identity)?;
-        addresses.push(address.clone());
-        Some(())
-    }
-}
-
+#[derive(Clone)]
 pub struct Delta {
     /// The previous version
     previous: Address,
@@ -66,7 +66,7 @@ impl Datastore {
         return Some(address);
     }
 
-    pub fn update(&mut self, storable: &dyn Storable) -> Option<()> /* Option<Delta> */ {
+    pub fn update(&mut self, storable: &dyn Storable) -> Option<Delta> {
         // get the identity of the storable object
         let identity = storable.identity();
         // find the most current version of that identity on the current branch
@@ -82,10 +82,10 @@ impl Datastore {
         // update the current version of this identity on the current branch
         self.local_branch.commit(&identity, &address)?;
         // return the delta
-        Some(())
+        todo!()
     }
 
-    pub fn register(&mut self, storable: &dyn Storable) -> Option<()> {
+    pub fn register(&mut self, _storable: &dyn Storable) -> Option<()> {
         // get the identity of the storable object
         // walk the context chain to determine the validity and location of the object
         // calculate the content address

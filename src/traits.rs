@@ -1,6 +1,9 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH}
+};
 
-use rand::prelude::*;
+use rand::random;
 use sha3::{Digest, Sha3_256};
 use serde::{Serialize, Deserialize};
 
@@ -18,7 +21,7 @@ impl Tag {
     }
 
     pub fn generate() -> Tag {
-        let mut randstamp = rand::random::<[u8; 32]>().to_vec();
+        let mut randstamp = random::<[u8; 32]>().to_vec();
         let mut timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
@@ -50,6 +53,15 @@ impl Identity {
     pub fn tag(&self) -> Tag { self.0.clone() }
 }
 
+// #[derive(Serialize, Deserialize)]
+// pub struct Context(HashMap<Identity, Box<dyn Storable>>);
+//
+// impl Clone for Context {
+//     fn clone(&self) -> Context {
+//
+//     }
+// }
+
 /// A storable entity:
 /// - Has a permanent identity
 /// - Is defined within the context of another identity
@@ -57,6 +69,25 @@ impl Identity {
 pub trait Storable {
     /// An Identity, same across versions
     fn identity(&self) -> Identity;
+    // /// basically Clone
+    // fn duplicate(&self) -> Box<dyn Storable>;
     /// The enclosing Identity as to which this one is relevant
     fn context(&self) -> Option<Box<dyn Storable>>;
+
+    fn find(&self, identity: &Identity) -> Option<Box<dyn Storable>>;
+}
+
+#[typetag::serde]
+pub trait Diff {
+    fn base(initial: &dyn Storable) -> Box<dyn Diff> where Self: Sized;
+
+    fn new(
+        prev: &dyn Storable,
+        next: &dyn Storable,
+    ) -> Self where Self: Sized;
+
+    fn apply(
+        prev: &dyn Storable,
+        diff: &dyn Storable,
+    ) -> Self where Self: Sized;
 }

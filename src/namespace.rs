@@ -1,5 +1,10 @@
+use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
-use crate::{traits::{Storable, Identity}, page::Page, agent::Agent};
+use crate::{
+    traits::{Storable, Identity},
+    agent::Agent,
+    page::Page
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Namespace {
@@ -8,6 +13,7 @@ pub struct Namespace {
     identity: Identity, // Namespace
     title:    String,
     root:     Identity, // Page
+    pages:    HashMap<Identity, Page>,
 }
 
 #[typetag::serde]
@@ -16,5 +22,9 @@ impl Storable for Namespace {
 
     fn context(&self) -> Option<Box<dyn Storable>> {
         Some(Box::new(self.agent.clone()))
+    }
+
+    fn find(&self, identity: &Identity) -> Option<Box<dyn Storable>> {
+        Some(Box::new(self.pages.get(identity)?.clone()))
     }
 }
