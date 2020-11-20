@@ -32,6 +32,8 @@ pub struct Datastore {
     cache: HashMap<Address, Vec<u8>>,
 }
 
+// pub type Cache = HashMap<Address, Vec<u8>>;
+
 impl Datastore {
     fn load(&self, address: &Address) -> Option<Content> {
         // TODO: schedule on network if not in cache?
@@ -56,8 +58,9 @@ impl Datastore {
     // TODO: commit
     // NOTE: just local for now!
     pub fn update(&mut self, content: &Content) -> Option<()> {
-        let address = self.store(content)?;
-        self.local.update(content)?;
+        // let address = self.store(content)?;
+        let branch = &mut self.local;
+        branch.update(self, content)?;
         todo!()
     }
 
@@ -79,7 +82,7 @@ impl Datastore {
 /// Once they've been resolved, changes should automatically propogate across branches.
 pub struct Branch {
     /// The Identity of this branch
-    identity: Identity,
+    // identity: Identity,
     // TODO: identity should take context into account...
     /// All identities and their associated version history.
     histories: HashMap<Identity, History>,
@@ -89,7 +92,7 @@ impl Branch {
     // TODO: initialize?
     pub fn new(/* owner: Agent */) -> Branch {
         Branch {
-            identity: Identity::new(),
+            // identity: Identity::new(),
             histories: HashMap::new(),
         }
     }
@@ -98,17 +101,14 @@ impl Branch {
         self.histories.get(&content.identity())
     }
 
-    pub fn update(&mut self, content: &Content) -> Option<()> {
-        let history = self.histories.get(&content.identity())?;
-
-        // find the right history
-        // commit in the history
-        todo!()
+    pub fn update(&mut self, datastore: &mut Datastore, content: &Content) -> Option<()> {
+        let history = self.histories.get_mut(&content.identity())?;
+        history.commit(datastore, content);
+        Some(())
     }
 
     pub fn register(&mut self, datastore: &mut Datastore, content: Content) -> Option<()> {
         let identity = content.identity();
-        let address  = datastore.store(&content)?;
         let history = History::new(datastore, content)?;
 
         if self.histories.contains_key(&identity) { return None; }
@@ -121,7 +121,9 @@ impl Branch {
 /// An append-only datastructure that acts as an ordered map.
 /// deltas maps
 pub struct History {
-    head:   Address,
+    /// The Address of the latest Delta.
+    head: Address,
+    /// Maps Content addresses to the Delta that is used to make that address.
     deltas: HashMap<Address, Delta>,
 }
 
@@ -140,25 +142,20 @@ impl History {
     /// Commit a delta onto the head history.
     /// Returns None if the delta can not be applied,
     /// Panics if it is passed a base delta, which should be unreachable.
-    fn commit(&mut self, delta: Delta) -> Option<()> {
-        match delta {
-            Delta::Tip { ref previous, ref checksum, .. } => {
-                if previous != &self.head { return None; }
-                let ck = checksum.clone();
-                self.deltas.insert(ck.clone(), delta);
-                self.head = ck
-            }
-            // a history can only have one base,
-            // and that base in genned at the start.
-            Delta::Base {..} => unreachable!(),
-        }
+    fn commit(&mut self, datastore: &mut Datastore, content: &Content) -> Option<()> {
+        let previous = self.delta(&self.head)?.resolve(datastore)?;
+        let delta = Delta::new(datastore, &previous, content)?;
+        let address = datastore.store(content)?;
+
+        self.deltas.insert(address.clone(), delta);
+        self.head = address;
         Some(())
     }
 
-    // pub fn version(&self, address: &Address) -> Option<&Delta> {
-    //     let delta = self.deltas.get(address)?;
-    //     return Some(delta);
-    // }
+    pub fn delta(&self, address: &Address) -> Option<&Delta> {
+        let delta = self.deltas.get(address)?;
+        return Some(delta);
+    }
 }
 
 // TODO: make deltas content so that they can be resolved!
@@ -204,7 +201,6 @@ impl Delta {
     }
 
     fn resolve(&self, datastore: &mut Datastore) -> Option<Content> {
-        // todo!();
         match self {
             Delta::Base { base, .. } => Some(base.clone()),
             Delta::Tip  { previous, difference, checksum } => {
