@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum Storable {
+pub enum Content {
     Agent(Agent),
     Namespace(Namespace),
     Page(Page),
@@ -19,13 +19,13 @@ pub enum Storable {
     // Content(Content),
 }
 
-/// A storable entity:
+/// A content entity:
 /// - Has a permanent identity
 /// - Is defined within the context of another identity
-impl Storable {
+impl Content {
     /// An Identity, same across versions
     pub fn identity(&self) -> Identity {
-        use Storable::*;
+        use Content::*;
         match self {
             Agent(a)     => a.identity(),
             Namespace(n) => n.identity(),
@@ -34,11 +34,11 @@ impl Storable {
     }
 
     // /// basically Clone
-    // fn duplicate(&self) -> Box<dyn Storable>;
+    // fn duplicate(&self) -> Box<dyn Content>;
     /// The enclosing `Identity` as to which this one is relevant.
-    /// Essentially works up the context-chain of `Storable`s.
-    pub fn context(&self) -> Option<Storable> {
-        use Storable::*;
+    /// Essentially works up the context-chain of `Content`s.
+    pub fn context(&self) -> Option<Content> {
+        use Content::*;
         let context = match self {
             Agent(_)     => return None,
             Namespace(n) => Agent(n.context()),
@@ -48,13 +48,13 @@ impl Storable {
     }
 
     /// Find a nested `Identity` inside this one.
-    /// Essentially works down the context-chain of `Storable`s.
-    pub fn find(&self, identity: &Identity) -> Option<Storable> {
-        use Storable::*;
+    /// Essentially works down the context-chain of `Content`s.
+    pub fn find(&self, identity: &Identity) -> Option<Content> {
+        use Content::*;
         let found = match self {
-            Storable::Agent(a)     => Namespace(a.find(identity)?),
-            Storable::Namespace(n) => Page(n.find(identity)?),
-            Storable::Page(_)      => return None,
+            Content::Agent(a)     => Namespace(a.find(identity)?),
+            Content::Namespace(n) => Page(n.find(identity)?),
+            Content::Page(_)      => return None,
         };
         return Some(found);
     }

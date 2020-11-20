@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::{
     namespace::Namespace,
-    content::Content,
+    data::Data,
     handle::Identity
 };
 
@@ -11,7 +11,7 @@ pub struct Page {
     identity:  Identity, // Page
     parent:    Identity, // Page
     title:     String,
-    content:   Content, // Content
+    content:   Data, // Content
     children:  Vec<Identity>, // Page
 }
 

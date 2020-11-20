@@ -6,13 +6,14 @@ use std::{
 use crate::{
     handle::{Identity, Address},
     diff::Diff,
-    storable::Storable, agent::Agent,
+    content::Content,
+    agent::Agent,
 };
 
 // TODO: how to make it so the user does not have to have the whole history on-hahd
 // but can still work with and modify that which they do have?
 
-// TODO: should a datastore be storable?
+// TODO: should a datastore be content?
 // Probably not.
 /// A datastore is a database of two parts:
 /// The first part is the content-addressed storage.
@@ -32,39 +33,40 @@ pub struct Datastore {
 }
 
 impl Datastore {
-    fn load(&self, address: &Address) -> Option<Storable> {
+    fn load(&self, address: &Address) -> Option<Content> {
         // TODO: schedule on network if not in cache?
         let serialized = self.cache.get(address)?;
         let object = rmp_serde::from_slice(serialized).ok()?;
         return Some(object);
     }
 
-    // TODO: move to address?
-    fn stamp(storable: &Storable) -> Option<(Address, Vec<u8>)> {
-        let serialized = rmp_serde::to_vec(storable).ok()?;
-        return Some((Address::new(&serialized), serialized));
-    }
+    fn store(&mut self, content: &Content) -> Option<Address> {
+        fn stamp(content: &Content) -> Option<(Address, Vec<u8>)> {
+            let serialized = rmp_serde::to_vec(content).ok()?;
+            return Some((Address::new(&serialized), serialized));
+        }
 
-    fn store(&mut self, storable: &Storable) -> Option<Address> {
-        let (address, serialized) = Datastore::stamp(storable)?;
-        self.cache.insert(address.clone(), serialized);
+        let (address, serialized) = stamp(content)?;
+        if !self.cache.contains_key(&address) {
+            self.cache.insert(address.clone(), serialized);
+        }
         return Some(address);
     }
 
     // TODO: commit
     // NOTE: just local for now!
-    pub fn update(&mut self, storable: &Storable) -> Option<()> {
-        let address = self.store(storable)?;
-        self.local.update(storable)?;
+    pub fn update(&mut self, content: &Content) -> Option<()> {
+        let address = self.store(content)?;
+        self.local.update(content)?;
         todo!()
     }
 
-    pub fn register(&mut self, storable: &Storable) -> Option<()> {
+    pub fn register(&mut self, content: &Content) -> Option<()> {
         todo!()
     }
 }
 
-// TODO: should branch be storable?
+// TODO: should branch be content?
 // I think it fits the bill.
 /// Represents a single chain of versions across an entire datastore branch.
 /// Note that this is not quite the same as a git branch, for instance.
@@ -78,37 +80,40 @@ impl Datastore {
 pub struct Branch {
     /// The Identity of this branch
     identity: Identity,
+    // TODO: identity should take context into account...
     /// All identities and their associated version history.
     histories: HashMap<Identity, History>,
 }
 
 impl Branch {
     // TODO: initialize?
-    pub fn new(owner: Agent) -> Branch {
+    pub fn new(/* owner: Agent */) -> Branch {
         Branch {
             identity: Identity::new(),
             histories: HashMap::new(),
         }
     }
 
-    // pub fn head(&self, storable: &Storable) -> Option<&Delta> {
-    //
-    // }
-
-    pub fn history(&self, storable: &Storable) -> Option<&History> {
-        self.histories.get(&storable.identity())
+    pub fn history(&self, content: &Content) -> Option<&History> {
+        self.histories.get(&content.identity())
     }
 
-    pub fn update(&mut self, storable: &Storable) -> Option<()> {
-        let history = self.histories.get(&storable.identity())?;
+    pub fn update(&mut self, content: &Content) -> Option<()> {
+        let history = self.histories.get(&content.identity())?;
 
         // find the right history
         // commit in the history
         todo!()
     }
 
-    pub fn register(&mut self, storable: &Storable) -> Option<()> {
-        todo!()
+    pub fn register(&mut self, datastore: &mut Datastore, content: Content) -> Option<()> {
+        let identity = content.identity();
+        let address  = datastore.store(&content)?;
+        let history = History::new(datastore, content)?;
+
+        if self.histories.contains_key(&identity) { return None; }
+        else { self.histories.insert(identity, history)?; }
+        Some(())
     }
 }
 
@@ -122,23 +127,20 @@ pub struct History {
 
 impl History {
     /// Create a new history.
-    pub fn new(initial: Delta) -> History {
-        match initial {
-            Delta::Base { ref checksum, .. } => {
-                let mut deltas = HashMap::new();
-                let ck = checksum.clone();
-                deltas.insert(ck.clone(), initial);
-                // build a
-                return History { head: ck, deltas };
-            },
-            Delta::Tip { .. } => unreachable!(),
-        }
+    fn new(datastore: &mut Datastore, initial: Content) -> Option<History> {
+        let address = datastore.store(&initial)?;
+        let delta = Delta::base(datastore, initial)?;
+
+        let mut deltas = HashMap::new();
+        deltas.insert(address.clone(), delta);
+
+        return Some(History { head: address, deltas });
     }
 
     /// Commit a delta onto the head history.
     /// Returns None if the delta can not be applied,
     /// Panics if it is passed a base delta, which should be unreachable.
-    pub fn commit(&mut self, delta: Delta) -> Option<()> {
+    fn commit(&mut self, delta: Delta) -> Option<()> {
         match delta {
             Delta::Tip { ref previous, ref checksum, .. } => {
                 if previous != &self.head { return None; }
@@ -159,13 +161,13 @@ impl History {
     // }
 }
 
-// TODO: make deltas storable so that they can be resolved!
+// TODO: make deltas content so that they can be resolved!
 
 pub enum Delta {
     /// The initial version, to which all changes are applied.
     Base {
         /// The base unit of content itself upon which all deltas are applied.
-        base: Storable,
+        base: Content,
         /// A hash of the base unit of content
         checksum: Address,
     },
@@ -181,23 +183,37 @@ pub enum Delta {
     }
 }
 
+/// Generated deltas must be stored in the datastore!
 impl Delta {
-    pub fn new(previous: &Storable, next: &Storable) -> Delta {
-        // calculate the diffs and addresses
-        todo!()
+    fn base(datastore: &mut Datastore, initial: Content) -> Option<Delta> {
+        let checksum = datastore.store(&initial)?;
+        Some(Delta::Base { base: initial, checksum })
     }
 
-    pub fn resolve(&self, history: &History, datastore: &Datastore) -> Option<Storable> {
+    // calculate the diffs and addresses
+    fn new(datastore: &mut Datastore, previous: &Content, next: &Content) -> Option<Delta> {
+        let prev_addr = datastore.store(previous)?;
+        let next_addr = datastore.store(next)?;
+        let diff = Diff::make(previous, next)?;
+
+        Some(Delta::Tip {
+            previous:   prev_addr,
+            difference: diff,
+            checksum:   next_addr,
+        })
+    }
+
+    fn resolve(&self, datastore: &mut Datastore) -> Option<Content> {
         // todo!();
         match self {
             Delta::Base { base, .. } => Some(base.clone()),
             Delta::Tip  { previous, difference, checksum } => {
                 // TODO: check datastore cache, then history.
-                let prev_storable = datastore.resolve(previous);
-                let next_storable = Diff::apply(prev_storable, difference)?;
+                let prev_content = datastore.load(previous)?;
+                let next_content = Diff::apply(&prev_content, difference)?;
                 // check the checksum
-                if &Datastore::stamp(&next_storable)?.0 != checksum { return None; }
-                return Some(next_storable)
+                if &datastore.store(&next_content)? != checksum { return None; }
+                return Some(next_content)
             }
         }
     }

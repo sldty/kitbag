@@ -1,8 +1,8 @@
-pub mod storable;
+pub mod content;
 pub mod diff;
 pub mod datastore;
 pub mod agent;
 pub mod namespace;
 pub mod page;
-pub mod content;
+pub mod data;
 pub mod handle;

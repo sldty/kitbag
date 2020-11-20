@@ -4,7 +4,7 @@ use crate::{
     agent::AgentDiff,
     page::PageDiff,
     namespace::NamespaceDiff,
-    storable::Storable
+    content::Content
 };
 
 // Just a word of warning:
@@ -25,8 +25,8 @@ pub enum Diff {
 }
 
 impl Diff {
-    pub fn make(prev: &Storable, next: &Storable) -> Option<Diff> {
-        use Storable::*;
+    pub fn make(prev: &Content, next: &Content) -> Option<Diff> {
+        use Content::*;
         if prev.identity() != next.identity() { return None; }
         let diff: Diff = match (prev, next) {
             ( Agent(p),     Agent(n)     ) => Diff::Agent(AgentDiff::make(p, n)),
@@ -37,9 +37,9 @@ impl Diff {
         return Some(diff);
     }
 
-    pub fn apply(tip: &Storable, diff: &Diff) -> Option<Storable> {
-        use Storable::*;
-        let applied: Storable = match (tip, diff) {
+    pub fn apply(tip: &Content, diff: &Diff) -> Option<Content> {
+        use Content::*;
+        let applied: Content = match (tip, diff) {
             ( Agent(s),     Diff::Agent(d)     ) => Agent(d.apply(s)),
             ( Namespace(s), Diff::Namespace(d) ) => Namespace(d.apply(s)),
             ( Page(s),      Diff::Page(d)      ) => Page(d.apply(s)),
