@@ -9,6 +9,11 @@ use crate::{
     storable::Storable, agent::Agent,
 };
 
+// TODO: how to make it so the user does not have to have the whole history on-hahd
+// but can still work with and modify that which they do have?
+
+// TODO: should branch be storable?
+// I think it fits the bill.
 /// Represents a single chain of versions across an entire datastore branch.
 /// Note that this is not quite the same as a git branch, for instance.
 /// Each branch is expected to have one clear owner per node,
@@ -22,14 +27,21 @@ pub struct Branch {
     /// The owner of the branch. Also can be used to find the root Identity.
     owner: Agent,
     /// All identities and their associated version history.
-    identities: HashMap<Identity, History>,
+    histories: HashMap<Identity, History>,
 }
 
 impl Branch {
-    pub fn history(&self, identity: &Identity) -> Option<&History> {
-        let history = self.identities.get(&identity)?;
-        return Some(history);
-    }
+    // pub fn new(owner: Agent) -> Branch {
+    //     Branch {
+    //         owner,
+    //         histories: HashMap::new(),
+    //     }
+    // }
+
+    // pub fn history(&self, identity: &Identity) -> Option<&History> {
+    //     let history = self.identities.get(&identity)?;
+    //     return Some(history);
+    // }
 
     pub fn commit(&mut self, identity: &Storable) -> Option<()> {
         // find the right history
