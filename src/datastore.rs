@@ -4,7 +4,6 @@ use std::{
 };
 
 use crate::{
-    agent::Agent,
     handle::Address,
     diff::Diff,
     storable::Storable,

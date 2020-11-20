@@ -1,18 +1,8 @@
-use std::{
-    collections::HashMap,
-    time::{SystemTime, UNIX_EPOCH}
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use rand::random;
 use sha3::{Digest, Sha3_256};
 use serde::{Serialize, Deserialize};
-
-use crate::{
-    content::Content,
-    agent::Agent,
-    page::Page,
-    namespace::Namespace
-};
 
 // TODO: set to a fixed size
 /// A tag is a unique identifier.
