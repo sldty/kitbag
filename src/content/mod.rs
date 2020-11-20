@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize};
-use crate::traits::Storable;
 
 pub mod number;
 pub mod document;

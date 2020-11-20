@@ -1,8 +1,8 @@
 use serde::{Serialize, Deserialize};
 use crate::{
     namespace::Namespace,
-    traits::{Storable, Identity, Diff},
-    content::Content
+    content::Content,
+    handle::Identity
 };
 
 #[derive(Clone, Serialize, Deserialize)]

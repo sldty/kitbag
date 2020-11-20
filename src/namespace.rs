@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use crate::{
-    traits::{Storable, Identity},
     agent::Agent,
-    page::Page
+    page::Page,
+    handle::Identity
 };
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -27,3 +27,6 @@ impl Namespace {
         Some(self.pages.get(identity)?.clone())
     }
 }
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct NamespaceDiff {}

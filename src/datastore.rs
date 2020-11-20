@@ -5,7 +5,9 @@ use std::{
 
 use crate::{
     agent::Agent,
-    traits::{Address, Storable, Identity, Diff},
+    handle::Address,
+    diff::Diff,
+    storable::Storable,
 };
 
 // TODO: should a datastore be storable?

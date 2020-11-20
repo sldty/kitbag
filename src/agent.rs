@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use crate::{
     namespace::Namespace,
-    traits::{Identity, Storable}
+    handle::Identity,
 };
 
 // TODO: make into trait or enum
@@ -23,3 +23,6 @@ impl Agent {
         Some(self.namespaces.get(identity)?.clone())
     }
 }
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct AgentDiff {}
