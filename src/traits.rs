@@ -7,6 +7,13 @@ use rand::random;
 use sha3::{Digest, Sha3_256};
 use serde::{Serialize, Deserialize};
 
+use crate::{
+    content::Content,
+    agent::Agent,
+    page::Page,
+    namespace::Namespace
+};
+
 // TODO: set to a fixed size
 /// A tag is a unique identifier.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -62,32 +69,87 @@ impl Identity {
 //     }
 // }
 
+#[derive(Clone, Serialize, Deserialize)]
+pub enum Storable {
+    Agent(Agent),
+    Namespace(Namespace),
+    Page(Page),
+    // TODO: is context it's own thing,
+    // or just something that a page has?
+    // can the content type of a page change?
+    // no. the content type can not change.
+    // Content(Content),
+}
+
 /// A storable entity:
 /// - Has a permanent identity
 /// - Is defined within the context of another identity
-#[typetag::serde]
-pub trait Storable {
+impl Storable {
     /// An Identity, same across versions
-    fn identity(&self) -> Identity;
+    pub fn identity(&self) -> Identity {
+        use Storable::*;
+        match self {
+            Agent(a)     => a.identity(),
+            Namespace(n) => n.identity(),
+            Page(p)      => p.identity(),
+        }
+    }
+
     // /// basically Clone
     // fn duplicate(&self) -> Box<dyn Storable>;
-    /// The enclosing Identity as to which this one is relevant
-    fn context(&self) -> Option<Box<dyn Storable>>;
+    /// The enclosing `Identity` as to which this one is relevant.
+    /// Essentially works up the context-chain of `Storable`s.
+    pub fn context(&self) -> Option<Storable> {
+        use Storable::*;
+        let context = match self {
+            Agent(a)     => return None,
+            Namespace(n) => Agent(n.context()),
+            Page(p)      => Namespace(p.context()),
+        };
+        return Some(context);
+    }
 
-    fn find(&self, identity: &Identity) -> Option<Box<dyn Storable>>;
+    /// Find a nested `Identity` inside this one.
+    /// Essentially works down the context-chain of `Storable`s.
+    pub fn find(&self, identity: &Identity) -> Option<Storable> {
+        use Storable::*;
+        let found = match self {
+            Storable::Agent(a)     => Namespace(a.find(identity)?),
+            Storable::Namespace(n) => Page(n.find(identity)?),
+            Storable::Page(p)      => return None,
+        };
+        return Some(found);
+    }
 }
 
-#[typetag::serde]
-pub trait Diff {
-    fn base(initial: &dyn Storable) -> Box<dyn Diff> where Self: Sized;
+#[derive(Clone, Serialize, Deserialize)]
+pub enum Diff {
+    Agent(AgentDiff),
+    Namespace(NamespaceDiff),
+    Page(PageDiff),
+}
 
-    fn new(
-        prev: &dyn Storable,
-        next: &dyn Storable,
-    ) -> Self where Self: Sized;
+impl Diff {
+    fn make(prev: &Storable, next: &Storable) -> Option<Diff> {
+        use Storable::*;
+        if prev.identity() != next.identity() { return None; }
+        let diff: Diff = match (prev, next) {
+            ( Agent(p),     Agent(n)     ) => Diff::Agent(AgentDiff::make(p, n)),
+            ( Namespace(p), Namespace(n) ) => Diff::Namespace(NamespaceDiff::make(p, n)),
+            ( Page(p),      Page(n)      ) => Diff::Page(PageDiff::make(p, n)),
+            _ => return None,
+        };
+        return Some(diff);
+    }
 
-    fn apply(
-        prev: &dyn Storable,
-        diff: &dyn Storable,
-    ) -> Self where Self: Sized;
+    fn apply(tip: &Storable, diff: &Diff) -> Option<Storable> {
+        use Storable::*;
+        match (tip, diff) {
+            ( Agent(s),     Diff::Agent(d)     ) => d.apply(s),
+            ( Namespace(s), Diff::Namespace(d) ) => d.apply(s),
+            ( Page(s),      Diff::Page(d)      ) => d.apply(s),
+            _ => return None,
+        }
+        todo!()
+    }
 }

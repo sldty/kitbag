@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     agent::Agent,
-    traits::{Address, Storable, Identity},
+    traits::{Address, Storable, Identity, Diff},
 };
 
 // TODO: should a datastore be storable?
@@ -47,18 +47,18 @@ pub struct Delta {
     previous: Address,
     /// A hash of the content after the diff is applied
     current: Address,
-    // /// A diff that can be applied to the previous version to get the next version.
-    // difference: Box<dyn Diff>,
+    /// A diff that can be applied to the previous version to get the next version.
+    difference: Diff,
 }
 
 impl Datastore {
-    fn load(&self, address: &Address) -> Option<Box<dyn Storable>> {
+    fn load(&self, address: &Address) -> Option<Storable> {
         let serialized = self.cached_addresses.get(address)?;
-        let object: Box<dyn Storable> = rmp_serde::from_slice(serialized).ok()?;
+        let object = rmp_serde::from_slice(serialized).ok()?;
         return Some(object);
     }
 
-    fn store(&mut self, storable: &dyn Storable) -> Option<Address> {
+    fn store(&mut self, storable: &Storable) -> Option<Address> {
         let serialized = rmp_serde::to_vec(storable).ok()?;
         let address    = Address::new(&serialized);
         // TODO: store address permanently?
@@ -66,7 +66,7 @@ impl Datastore {
         return Some(address);
     }
 
-    pub fn update(&mut self, storable: &dyn Storable) -> Option<Delta> {
+    pub fn update(&mut self, storable: &Storable) -> Option<Delta> {
         // get the identity of the storable object
         let identity = storable.identity();
         // find the most current version of that identity on the current branch
@@ -85,7 +85,7 @@ impl Datastore {
         todo!()
     }
 
-    pub fn register(&mut self, _storable: &dyn Storable) -> Option<()> {
+    pub fn register(&mut self, _storable: &Storable) -> Option<()> {
         // get the identity of the storable object
         // walk the context chain to determine the validity and location of the object
         // calculate the content address

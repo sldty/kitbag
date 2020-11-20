@@ -14,13 +14,12 @@ pub struct Agent {
     namespaces: HashMap<Identity, Namespace>,
 }
 
-#[typetag::serde]
-impl Storable for Agent {
-    fn identity(&self) -> Identity { self.identity.clone() }
+impl Agent {
+    pub fn identity(&self) -> Identity { self.identity.clone() }
     // TODO: verify cryptographic keys
-    fn context(&self) -> Option<Box<dyn Storable>> { None }
+    // pub fn context(&self) -> Option<()> { None }
 
-    fn find(&self, identity: &Identity) -> Option<Box<dyn Storable>> {
-        Some(Box::new(self.namespaces.get(identity)?))
+    pub fn find(&self, identity: &Identity) -> Option<Namespace> {
+        Some(self.namespaces.get(identity)?.clone())
     }
 }

@@ -16,15 +16,14 @@ pub struct Namespace {
     pages:    HashMap<Identity, Page>,
 }
 
-#[typetag::serde]
-impl Storable for Namespace {
-    fn identity(&self) -> Identity { self.identity.clone() }
+impl Namespace {
+    pub fn identity(&self) -> Identity { self.identity.clone() }
 
-    fn context(&self) -> Option<Box<dyn Storable>> {
-        Some(Box::new(self.agent.clone()))
+    pub fn context(&self) -> Agent {
+        self.agent.clone()
     }
 
-    fn find(&self, identity: &Identity) -> Option<Box<dyn Storable>> {
-        Some(Box::new(self.pages.get(identity)?.clone()))
+    pub fn find(&self, identity: &Identity) -> Option<Page> {
+        Some(self.pages.get(identity)?.clone())
     }
 }
