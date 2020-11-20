@@ -43,7 +43,7 @@ impl Address {
 }
 
 /// An address is the immutable handle of an entity
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Identity(Tag);
 impl Identity {
     pub fn new() -> Address { Address(Tag::generate()) }
