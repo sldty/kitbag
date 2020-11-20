@@ -1,4 +1,4 @@
-use barbara::*;
+use kitbag::*;
 
 #[test]
 fn messing_around() {
