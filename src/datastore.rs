@@ -4,10 +4,97 @@ use std::{
 };
 
 use crate::{
-    handle::Address,
+    handle::{Identity, Address},
     diff::Diff,
-    storable::Storable,
+    storable::Storable, agent::Agent,
 };
+
+/// Represents a single chain of versions across an entire datastore branch.
+/// Note that this is not quite the same as a git branch, for instance.
+/// Each branch is expected to have one clear owner per node,
+/// i.e. all well-formed writes to a branch should succeed.
+/// There's some nuance, here, but the idea is for this to work in a local-first manner.
+/// Everyone has a local branch that only they can write to,
+/// And changes are synced by automatically merging when no conflicts are present.
+/// Conflicts are highlighted, and can be manually resolved.
+/// Once they've been resolved, changes should automatically propogate across branches.
+pub struct Branch {
+    /// The owner of the branch. Also can be used to find the root Identity.
+    owner: Agent,
+    /// All identities and their associated version history.
+    identities: HashMap<Identity, History>,
+}
+
+impl Branch {
+    pub fn history(&self, identity: &Identity) -> Option<&History> {
+        let history = self.identities.get(&identity)?;
+        return Some(history);
+    }
+
+    pub fn commit(&mut self, identity: &Storable) -> Option<()> {
+        // find the right history
+        // commit in the history
+        todo!()
+    }
+}
+
+/// Represents a single chain of versions.
+/// An append-only datastructure that acts as an ordered map.
+/// deltas maps
+pub struct History {
+    /// A map to any specific version hash.
+    addresses: HashMap<Address, usize>,
+    /// An ordered list of deltas.
+    /// Each delta should be valid in the context of the one before it.
+    deltas: Vec<Delta>,
+}
+
+impl History {
+    pub fn new() -> History {
+        // TODO populate with initial data
+        History {
+            addresses: HashMap::new(),
+            deltas:    vec![],
+        }
+    }
+
+    pub fn version(&self, address: &Address) -> Option<&Delta> {
+        let index = self.addresses.get(address)?;
+        let delta = &self.deltas[*index];
+        return Some(delta);
+    }
+
+    pub fn commit(&mut self, next: &Storable) -> Option<()> {
+        let head = &self.deltas[self.deltas.len()];
+        // TODO: resolve the storable
+        // TODO: get the storable's address
+        let previous = todo!();
+        let address = todo!();
+        let delta = Delta::new(previous, next);
+        self.deltas.push(delta);
+        // TODO: check for conflicts
+        self.addresses.insert(address, self.deltas.len());
+        todo!()
+    }
+}
+
+pub struct Delta {
+    /// The address of the previous version's content.
+    /// Ok(a) means that this is not the root and there is another address.
+    /// Err(a) means that this is the root value.
+    previous: Result<Address, Storable>,
+    /// A diff that can be applied to the previous version to get the next version.
+    difference: Diff,
+    /// A hash of the content after the diff is applied
+    checksum: Address,
+}
+
+impl Delta {
+    pub fn new(previous: &Storable, next: &Storable) -> Delta {
+        // calculate the diffs and addresses
+        todo!()
+    }
+}
 
 // TODO: should a datastore be storable?
 // Probably not.
@@ -22,41 +109,6 @@ pub struct Datastore {
     other_branches:    Vec<Branch>,
     // TODO: maybe blob type?
     cached_addresses:  HashMap<Address, Vec<u8>>,
-}
-
-/// Represents a single chain of versions.
-/// Note that this is not quite the same as a git branch, for instance.
-/// Each branch is expected to have one clear owner per node,
-/// i.e. all well-formed writes to a branch should succeed.
-/// There's some nuance, here, but the idea is for this to work in a local-first manner.
-/// Everyone has a local branch that only they can write to,
-/// And changes are synced by automatically merging when no conflicts are present.
-/// Conflicts are highlighted, and can be manually resolved.
-/// Once they've been resolved, changes should automatically propogate across branches.
-pub struct Branch {}
-
-// impl Branch {
-//     pub fn head(&self, identity: &Identity) -> Option<Address> {
-//         let versions = self.cached_identities.get(&identity)?;
-//         if versions.is_empty() { return None; }
-//         return Some(versions[versions.len() - 1].clone().current);
-//     }
-//
-//     pub fn commit(&mut self, identity: &Identity, address: &Address) -> Option<()> {
-//         let addresses = self.cached_identities.get_mut(&identity)?;
-//         addresses.push(address.clone());
-//         Some(())
-//     }
-// }
-
-#[derive(Clone)]
-pub struct Delta {
-    /// The previous version
-    previous: Address,
-    /// A hash of the content after the diff is applied
-    current: Address,
-    /// A diff that can be applied to the previous version to get the next version.
-    difference: Diff,
 }
 
 impl Datastore {
@@ -74,6 +126,7 @@ impl Datastore {
         return Some(address);
     }
 
+    // TODO: commit
     pub fn update(&mut self, storable: &Storable) -> Option<Delta> {
         // get the identity of the storable object
         let identity = storable.identity();
