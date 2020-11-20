@@ -3,6 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use rand::random;
 use sha3::{Digest, Sha3_256};
 use serde::{Serialize, Deserialize};
+use crate::storable::Storable;
 
 // TODO: set to a fixed size
 /// A tag is a unique identifier.
@@ -39,6 +40,7 @@ impl Tag {
 pub struct Address(Tag);
 impl Address {
     pub fn new(content: &[u8]) -> Address { Address(Tag::hash(content)) }
+    pub fn serialize(content: &Storable) -> Vec<u8> { todo!() }
     pub fn tag(&self) -> Tag { self.0.clone() }
 }
 
@@ -46,6 +48,6 @@ impl Address {
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Identity(Tag);
 impl Identity {
-    pub fn new() -> Address { Address(Tag::generate()) }
+    pub fn new() -> Identity { Identity(Tag::generate()) }
     pub fn tag(&self) -> Tag { self.0.clone() }
 }

@@ -43,31 +43,11 @@ impl Datastore {
     }
 
     // TODO: commit
-    pub fn update(&mut self, storable: &Storable) -> Option<Delta> {
-        // get the identity of the storable object
-        let identity = storable.identity();
-        // find the most current version of that identity on the current branch
-        let _head = self.load(&self.local_branch.head(&identity)?)?;
-        // calculate the delta between that version and this new one
-        // let delta: Delta = Delta::make(head, storable);
-        // calculate the delta address
-        // let delta_address = Version::new(delta);
-        // cache & store the delta permanently
-        // calculate the content address
-        let address = self.store(storable)?;
-        // cache the content
-        // update the current version of this identity on the current branch
-        self.local_branch.commit(&identity, &address)?;
-        // return the delta
+    pub fn update(&mut self, storable: &Storable) -> Option<()> {
         todo!()
     }
 
-    pub fn register(&mut self, _storable: &Storable) -> Option<()> {
-        // get the identity of the storable object
-        // walk the context chain to determine the validity and location of the object
-        // calculate the content address
-        // cache & store the base version permanently
-        // update the current version of this identity on the current branch
+    pub fn register(&mut self, storable: &Storable) -> Option<()> {
         todo!()
     }
 }
@@ -84,28 +64,28 @@ impl Datastore {
 /// Conflicts are highlighted, and can be manually resolved.
 /// Once they've been resolved, changes should automatically propogate across branches.
 pub struct Branch {
-    /// The owner of the branch. Also can be used to find the root Identity.
-    owner: Agent,
+    /// The Identity of this branch
+    identity: Identity,
     /// All identities and their associated version history.
     histories: HashMap<Identity, History>,
 }
 
 impl Branch {
-    // pub fn new(owner: Agent) -> Branch {
-    //     Branch {
-    //         owner,
-    //         histories: HashMap::new(),
-    //     }
-    // }
+    // TODO: initialize?
+    pub fn new(owner: Agent) -> Branch {
+        Branch {
+            identity: Identity::new(),
+            histories: HashMap::new(),
+        }
+    }
 
-    // pub fn history(&self, identity: &Identity) -> Option<&History> {
-    //     let history = self.identities.get(&identity)?;
-    //     return Some(history);
-    // }
-
-    pub fn commit(&mut self, identity: &Storable) -> Option<()> {
+    pub fn update(&mut self, identity: &Storable) -> Option<()> {
         // find the right history
         // commit in the history
+        todo!()
+    }
+
+    pub fn register(&mut self, identity: &Storable) -> Option<()> {
         todo!()
     }
 }
@@ -114,51 +94,64 @@ impl Branch {
 /// An append-only datastructure that acts as an ordered map.
 /// deltas maps
 pub struct History {
-    /// A map to any specific version hash.
-    addresses: HashMap<Address, usize>,
-    /// An ordered list of deltas.
-    /// Each delta should be valid in the context of the one before it.
-    deltas: Vec<Delta>,
+    head:   Address,
+    deltas: HashMap<Address, Delta>,
 }
 
 impl History {
-    pub fn new() -> History {
-        // TODO populate with initial data
-        History {
-            addresses: HashMap::new(),
-            deltas:    vec![],
+    /// Create a new history.
+    pub fn new(initial: Delta) -> History {
+        match initial {
+            Delta::Base { checksum, .. } => {
+                let mut deltas = HashMap::new();
+                deltas.insert(checksum, initial);
+                return History { head: checksum, deltas };
+            },
+            Delta::Tip { .. } => unreachable!(),
         }
     }
 
-    pub fn version(&self, address: &Address) -> Option<&Delta> {
-        let index = self.addresses.get(address)?;
-        let delta = &self.deltas[*index];
-        return Some(delta);
+    /// Commit a delta onto the head history.
+    /// Returns None if the delta can not be applied,
+    /// Panics if it is passed a base delta, which should be unreachable.
+    pub fn commit(&mut self, delta: Delta) -> Option<()> {
+        match delta {
+            Delta::Tip { previous, difference, checksum } => {
+                if previous != self.head { return None; }
+                self.deltas.insert(checksum, delta);
+                self.head = checksum
+            }
+            // a history can only have one base,
+            // and that base in genned at the start.
+            Delta::Base {..} => unreachable!(),
+        }
+        Some(())
     }
 
-    pub fn commit(&mut self, next: &Storable) -> Option<()> {
-        let head = &self.deltas[self.deltas.len()];
-        // TODO: resolve the storable
-        // TODO: get the storable's address
-        let previous = todo!();
-        let address = todo!();
-        let delta = Delta::new(previous, next);
-        self.deltas.push(delta);
-        // TODO: check for conflicts
-        self.addresses.insert(address, self.deltas.len());
-        todo!()
-    }
+    // pub fn version(&self, address: &Address) -> Option<&Delta> {
+    //     let delta = self.deltas.get(address)?;
+    //     return Some(delta);
+    // }
 }
 
-pub struct Delta {
-    /// The address of the previous version's content.
-    /// Ok(a) means that this is not the root and there is another address.
-    /// Err(a) means that this is the root value.
-    previous: Result<Address, Storable>,
-    /// A diff that can be applied to the previous version to get the next version.
-    difference: Diff,
-    /// A hash of the content after the diff is applied
-    checksum: Address,
+pub enum Delta {
+    /// The initial version, to which all changes are applied.
+    Base {
+        /// The base unit of content itself upon which all deltas are applied.
+        base: Storable,
+        /// A hash of the base unit of content
+        checksum: Address,
+    },
+    /// A tip applied to either a base (initial version) or another tip
+    /// to create a new content
+    Tip {
+        /// The address of the previous version's content.
+        previous: Address,
+        /// A diff that can be applied to the previous version to get the next version.
+        difference: Diff,
+        /// A hash of the content after the diff is applied
+        checksum: Address,
+    }
 }
 
 impl Delta {
