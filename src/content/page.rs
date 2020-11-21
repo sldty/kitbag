@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use crate::{
-    namespace::Namespace,
+    content::Namespace,
     data::Data,
     handle::{Location, Identity}
 };

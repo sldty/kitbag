@@ -3,6 +3,8 @@ use serde::{Serialize, Deserialize};
 pub mod number;
 pub mod document;
 
+// TODO: pub uses
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Data {
     Number(number::Number),

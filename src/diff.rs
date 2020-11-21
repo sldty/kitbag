@@ -1,10 +1,10 @@
 use serde::{Serialize, Deserialize};
 
-use crate::{
-    agent::AgentDiff,
-    page::PageDiff,
-    namespace::NamespaceDiff,
-    content::Content
+use crate::content::{
+    AgentDiff,
+    PageDiff,
+    NamespaceDiff,
+    Content,
 };
 
 // Just a word of warning:

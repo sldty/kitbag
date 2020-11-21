@@ -7,7 +7,7 @@ use crate::{
     handle::{Identity, Address, Location},
     diff::Diff,
     content::Content,
-    agent::Agent,
+    content::Agent,
 };
 
 // TODO: how to make it so the user does not have to have the whole history on-hahd

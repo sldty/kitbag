@@ -1,9 +1,10 @@
 pub mod content;
-pub mod diff;
-pub mod set_diff;
-pub mod datastore;
-pub mod agent;
-pub mod namespace;
-pub mod page;
 pub mod data;
+
+pub mod datastore;
+pub mod diff;
 pub mod handle;
+
+pub use datastore::Datastore;
+pub use diff::Diff;
+pub use handle::{Tag, Address, Identity, Location};

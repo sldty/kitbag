@@ -1,11 +1,16 @@
+pub mod set_diff;
+pub mod agent;
+pub mod namespace;
+pub mod page;
+
+pub use set_diff::SetDiff;
+pub use agent::{Agent, AgentDiff};
+pub use namespace::{Namespace, NamespaceDiff};
+pub use page::{Page, PageDiff};
+
 use serde::{Serialize, Deserialize};
 
-use crate::{
-    agent::Agent,
-    page::Page,
-    namespace::Namespace,
-    handle::{Location, Identity}
-};
+use crate::handle::Location;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Content {

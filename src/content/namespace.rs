@@ -1,9 +1,8 @@
 use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
-    agent::Agent,
-    page::Page,
-    handle::{Location, Identity}, data::Data, set_diff::SetDiff
+    handle::{Location, Identity},
+    content::{SetDiff, Agent, Page},
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
