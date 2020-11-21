@@ -56,6 +56,22 @@ impl AgentDiff {
     }
 
     pub fn apply(&self, prev: &Agent) -> Agent {
-        todo!()
+        let display = if let Some(new) = &self.display { new.to_string() }
+            else { prev.display.to_string() };
+
+        let after_removed = prev.namespaces
+            .difference(&self.removed)
+            .map(|i| i.clone())
+            .collect::<HashSet<Identity>>();
+        let namespaces = after_removed
+            .union(&self.added)
+            .map(|i| i.clone())
+            .collect::<HashSet<Identity>>();
+
+        Agent {
+            display,
+            identity: prev.identity.clone(),
+            namespaces,
+        }
     }
 }
