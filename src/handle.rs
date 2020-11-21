@@ -69,3 +69,16 @@ impl Identity {
     pub fn new() -> Identity { Identity(Tag::generate()) }
     pub fn tag(&self) -> Tag { self.0.clone() }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Location(Vec<Identity>);
+
+impl Location {
+    pub fn root() -> Location { Location(vec![]) }
+
+    pub fn context(self, identity: Identity) -> Location {
+        let mut chain = self.0;
+        chain.push(identity);
+        return Location(chain);
+    }
+}
