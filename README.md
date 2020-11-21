@@ -13,7 +13,7 @@ Kitbag is a content-addressed versioned tree-structured graph-based datastore.
 
 Kitbag is also a collection of cryptographically-secure distributed/federated gossip protocols for replicating and collaborating on data in real-time.
 
-It's like the *backend* Notion + Discord + Google Docs over BitTorrent.
+It's like the *backend* of Notion + Discord + Google Docs over BitTorrent.
 
 It's a core component of the planned *Solidarity* project, a cornerstone of the Veritable Computation Initiative.
 
