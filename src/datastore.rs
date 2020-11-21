@@ -14,6 +14,12 @@ use crate::{
 // but can still work with and modify that which they do have?
 
 // TODO: how to make it so that user can modify agent without worrying about datastore?
+// TODO: implement some form of logarithmic history,
+// So changes are cheap and can be made often,
+// but will be 'lost' (i.e. combined) over time as to preserve space.
+// i.e. when editing, it's useful to be able to undo every character,
+// but when looking at a five-year-old document,
+// the exact timing of changes to every character is no longer as relevant.
 
 // TODO: should a datastore be content?
 // Probably not.

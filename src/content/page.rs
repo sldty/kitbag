@@ -5,6 +5,11 @@ use crate::{
     handle::{Location, Identity}
 };
 
+// TODO: linking/backlinking, full text search, etc.
+/// Represents a singular `Page` of user-provided `Data`,
+/// Whether this be a document, a chat room, a video, and so on.
+/// `Page`s can contain sub-pages, the `Data` of a page can embed other pages.
+/// So, for instance, you could copy a video's id, and embed it in a document.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Page {
     namespace:     Location, // Namespace
@@ -17,6 +22,9 @@ pub struct Page {
 }
 
 impl Page {
+    // TODO: root?
+
+    /// Creates a child `Page` within the context of a `Namespace`.
     pub fn child(&mut self, namespace: &mut Namespace, title: &str, data: Data) -> Page {
         let page = Page {
             namespace: self.namespace.clone(),
@@ -32,17 +40,25 @@ impl Page {
         return page;
     }
 
+    /// Returns the contextual location of the `Page`.
     pub fn location(&self) -> Location { self.namespace.find(&self.identity) }
 }
 
+// TODO: call out to Diff to calculate the difference between two Data
+/// Represents a difference between two `Pages`.
+/// Calculates the underlying difference of the Data it contains.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageDiff {}
 
 impl PageDiff {
+    /// Finds the difference between two `Namespace`s, and creates an `NamespaceDiff`.
     pub fn make(prev: &Page, next: &Page) -> PageDiff {
         todo!()
     }
 
+    // TODO: option types to indicate a conflict?
+
+    /// Applies this diff to another `Page` to create a new `Page`.
     pub fn apply(&self, prev: &Page) -> Page {
         todo!()
     }
