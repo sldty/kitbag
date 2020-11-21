@@ -17,7 +17,7 @@ use crate::{
 // to use traits in an elegant manner, be my guest.
 // For now, I find this to work just as well.
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Diff {
     Agent(AgentDiff),
     Namespace(NamespaceDiff),

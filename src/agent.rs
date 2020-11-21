@@ -7,7 +7,7 @@ use crate::{
 
 // TODO: make into trait or enum
 // TODO: add keys to agent
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Agent {
     display: String,
     identity: Identity, // Agent
@@ -15,6 +15,14 @@ pub struct Agent {
 }
 
 impl Agent {
+    pub fn new(display: &str) -> Agent {
+        Agent {
+            display: display.to_string(),
+            identity: Identity::new(), // Agent
+            namespaces: HashMap::new(),
+        }
+    }
+
     pub fn identity(&self) -> Identity { self.identity.clone() }
     // TODO: verify cryptographic keys
     // pub fn context(&self) -> Option<()> { None }
@@ -24,7 +32,7 @@ impl Agent {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentDiff {}
 
 impl AgentDiff {

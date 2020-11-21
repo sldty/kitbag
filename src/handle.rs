@@ -11,6 +11,12 @@ use crate::content::Content;
 pub struct Tag(Vec<u8>);
 
 impl Tag {
+    pub fn hex(&self) -> String {
+        self.0.iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>()
+    }
+
     pub fn hash(content: &[u8]) -> Tag {
         let mut hasher = Sha3_256::new();
         hasher.update(content);
@@ -19,15 +25,23 @@ impl Tag {
     }
 
     pub fn generate() -> Tag {
-        let mut randstamp = random::<[u8; 32]>().to_vec();
         let mut timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
             .as_nanos()
             .to_be_bytes()
             .to_vec();
-        randstamp.append(&mut timestamp);
-        Tag(randstamp)
+        let mut randstamp = random::<[u8; 16]>().to_vec();
+        timestamp.append(&mut randstamp);
+        Tag(timestamp)
+    }
+}
+
+impl std::fmt::Debug for Tag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.debug_tuple("Tag")
+            .field(&self.hex())
+            .finish()
     }
 }
 
@@ -36,7 +50,7 @@ impl Tag {
 // pub struct Blob(Vec<u8>);
 
 /// An address is the immutable handle of a specific version of an entity.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address(Tag);
 impl Address {
     pub fn new(content: &[u8]) -> Address { Address(Tag::hash(content)) }
@@ -49,7 +63,7 @@ impl Address {
 }
 
 /// An address is the immutable handle of an entity
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Identity(Tag);
 impl Identity {
     pub fn new() -> Identity { Identity(Tag::generate()) }

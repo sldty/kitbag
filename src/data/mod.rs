@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 pub mod number;
 pub mod document;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Data {
     Number(number::Number),
     // Body(document::Document),

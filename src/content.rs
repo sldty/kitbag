@@ -7,7 +7,7 @@ use crate::{
     handle::Identity
 };
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Content {
     Agent(Agent),
     Namespace(Namespace),

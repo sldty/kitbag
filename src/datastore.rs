@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     collections::HashMap,
 };
 
@@ -13,6 +13,8 @@ use crate::{
 // TODO: how to make it so the user does not have to have the whole history on-hahd
 // but can still work with and modify that which they do have?
 
+// TODO: how to make it so that user can modify agent without worrying about datastore?
+
 // TODO: should a datastore be content?
 // Probably not.
 /// A datastore is a database of two parts:
@@ -20,6 +22,7 @@ use crate::{
 /// This is on-disk, with a cache of commonly used items.
 /// The second part is a tree of identities.
 /// This is built out in-memory, from the relations contained from the content-addressed code.
+#[derive(Debug)]
 pub struct Datastore {
     /// The identity of the local branch.
     local: Branch,
@@ -35,6 +38,14 @@ pub struct Datastore {
 pub type Cache = HashMap<Address, Vec<u8>>;
 
 impl Datastore {
+    pub fn new(path: &Path) -> Datastore {
+        Datastore {
+            local: Branch::new(),
+            path: path.to_path_buf(),
+            cache: HashMap::new(),
+        }
+    }
+
     fn load(&self, address: &Address) -> Option<Content> {
         // TODO: schedule on network if not in cache?
         let serialized = self.cache.get(address)?;
@@ -43,6 +54,7 @@ impl Datastore {
     }
 
     fn store(&mut self, content: &Content) -> Option<Address> {
+        // TODO: store on disk
         let (address, serialized) = Address::stamp(content)?;
         if !self.cache.contains_key(&address) {
             self.cache.insert(address.clone(), serialized);
@@ -75,9 +87,9 @@ impl Datastore {
         return Some(())
     }
 
-    pub fn register(&mut self, content: Content) -> Option<()> {
-        self.store(&content)?;
-        self.local.register(content)?;
+    pub fn register(&mut self, content: &Content) -> Option<()> {
+        self.store(content)?;
+        self.local.register(content.clone())?;
         todo!()
     }
 }
@@ -93,6 +105,7 @@ impl Datastore {
 /// And changes are synced by automatically merging when no conflicts are present.
 /// Conflicts are highlighted, and can be manually resolved.
 /// Once they've been resolved, changes should automatically propogate across branches.
+#[derive(Debug)]
 pub struct Branch {
     /// The Identity of this branch
     // identity: Identity,
@@ -131,8 +144,7 @@ impl Branch {
 }
 
 /// Represents a single chain of versions.
-/// An append-only datastructure that acts as an ordered map.
-/// deltas maps
+#[derive(Debug)]
 pub struct History {
     /// The Address of the latest Delta.
     head: Address,
@@ -176,6 +188,7 @@ impl History {
 
 // TODO: make deltas content so that they can be resolved!
 
+#[derive(Debug)]
 pub enum Delta {
     /// The initial version, to which all changes are applied.
     Base {

@@ -6,7 +6,7 @@ use crate::{
     handle::Identity
 };
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     /// The owner of the namespace
     agent:    Agent,
@@ -28,7 +28,7 @@ impl Namespace {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NamespaceDiff {}
 
 impl NamespaceDiff {

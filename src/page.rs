@@ -5,7 +5,7 @@ use crate::{
     handle::Identity
 };
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Page {
     namespace: Namespace,
     identity:  Identity, // Page
@@ -23,7 +23,7 @@ impl Page {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageDiff {}
 
 impl PageDiff {
