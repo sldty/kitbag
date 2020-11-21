@@ -7,13 +7,13 @@ use crate::{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Page {
-    namespace: Location, // Namespace
+    namespace:     Location, // Namespace
     pub identity:  Identity, // Page
     // None if page is the root page
-    parent:    Option<Identity>, // Page
+    parent:        Option<Identity>, // Page
     pub title:     String,
-    data:      Data, // Content
-    children:  Vec<Identity>, // Page
+    data:          Data, // Content
+    children:      Vec<Identity>, // Page
 }
 
 impl Page {

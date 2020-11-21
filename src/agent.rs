@@ -2,16 +2,16 @@ use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
     namespace::Namespace,
-    handle::{Location, Identity},
+    handle::{Location, Identity}, set_diff::SetDiff,
 };
 
 // TODO: make into trait or enum
 // TODO: add keys to agent
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Agent {
-    pub display: String,
+    pub display:  String,
     pub identity: Identity, // Agent
-    namespaces: HashSet<Identity>,
+    namespaces:   HashSet<Identity>,
 }
 
 impl Agent {
@@ -33,8 +33,7 @@ impl Agent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentDiff {
     display: Option<String>,
-    added: HashSet<Identity>,
-    removed: HashSet<Identity>,
+    namespaces_diff: SetDiff<Identity>,
 }
 
 impl AgentDiff {
@@ -42,36 +41,16 @@ impl AgentDiff {
         let display = if prev.display != next.display { Some(next.display.clone()) }
             else { None };
 
-        let added = next.namespaces
-            .difference(&prev.namespaces)
-            .map(|i| i.clone())
-            .collect::<HashSet<Identity>>();
-
-        let removed = prev.namespaces
-            .difference(&next.namespaces)
-            .map(|i| i.clone())
-            .collect::<HashSet<Identity>>();
-
-        AgentDiff { display, added, removed }
+        let namespaces_diff = SetDiff::make(&prev.namespaces, &next.namespaces);
+        AgentDiff { display, namespaces_diff }
     }
 
     pub fn apply(&self, prev: &Agent) -> Agent {
         let display = if let Some(new) = &self.display { new.to_string() }
             else { prev.display.to_string() };
 
-        let after_removed = prev.namespaces
-            .difference(&self.removed)
-            .map(|i| i.clone())
-            .collect::<HashSet<Identity>>();
-        let namespaces = after_removed
-            .union(&self.added)
-            .map(|i| i.clone())
-            .collect::<HashSet<Identity>>();
-
-        Agent {
-            display,
-            identity: prev.identity.clone(),
-            namespaces,
-        }
+        let identity = prev.identity.clone();
+        let namespaces = self.namespaces_diff.apply(&prev.namespaces);
+        Agent { display, identity, namespaces }
     }
 }

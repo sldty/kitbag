@@ -3,17 +3,17 @@ use serde::{Serialize, Deserialize};
 use crate::{
     agent::Agent,
     page::Page,
-    handle::{Location, Identity}, data::Data
+    handle::{Location, Identity}, data::Data, set_diff::SetDiff
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     /// The owner of the namespace
-    agent:    Location,
+    agent:        Location,
     pub identity: Identity, // Namespace
     pub title:    String,
-    roots:    Vec<Identity>, // Page
-    pages:    HashSet<Identity>, // Page
+    roots:        Vec<Identity>, // Page
+    pages:        HashSet<Identity>, // Page
 }
 
 impl Namespace {
@@ -38,7 +38,10 @@ impl Namespace {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NamespaceDiff {}
+pub struct NamespaceDiff {
+    title: Option<String>,
+    pages: SetDiff<Identity>,
+}
 
 impl NamespaceDiff {
     pub fn make(prev: &Namespace, next: &Namespace) -> NamespaceDiff {
