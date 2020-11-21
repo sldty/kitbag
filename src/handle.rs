@@ -40,8 +40,12 @@ impl Tag {
 pub struct Address(Tag);
 impl Address {
     pub fn new(content: &[u8]) -> Address { Address(Tag::hash(content)) }
-    pub fn serialize(content: &Content) -> Vec<u8> { todo!() }
     pub fn tag(&self) -> Tag { self.0.clone() }
+
+    pub fn stamp(content: &Content) -> Option<(Address, Vec<u8>)> {
+        let serialized = rmp_serde::to_vec(content).ok()?;
+        return Some((Address::new(&serialized), serialized));
+    }
 }
 
 /// An address is the immutable handle of an entity

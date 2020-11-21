@@ -29,10 +29,10 @@ pub struct Datastore {
     /// The write-path of this database.
     path: PathBuf,
     /// Recently accessed addresses for increased efficiency.
-    cache: HashMap<Address, Vec<u8>>,
+    cache: Cache,
 }
 
-// pub type Cache = HashMap<Address, Vec<u8>>;
+pub type Cache = HashMap<Address, Vec<u8>>;
 
 impl Datastore {
     fn load(&self, address: &Address) -> Option<Content> {
@@ -43,28 +43,41 @@ impl Datastore {
     }
 
     fn store(&mut self, content: &Content) -> Option<Address> {
-        fn stamp(content: &Content) -> Option<(Address, Vec<u8>)> {
-            let serialized = rmp_serde::to_vec(content).ok()?;
-            return Some((Address::new(&serialized), serialized));
-        }
-
-        let (address, serialized) = stamp(content)?;
+        let (address, serialized) = Address::stamp(content)?;
         if !self.cache.contains_key(&address) {
             self.cache.insert(address.clone(), serialized);
         }
         return Some(address);
     }
 
+    // TODO: make more general than deltas
+    fn resolve(&self, delta: &Delta) -> Option<Content> {
+        match delta {
+            Delta::Base { base, .. } => Some(base.clone()),
+            Delta::Tip  { previous, difference, checksum } => {
+                // TODO: check datastore cache, then history.
+                let prev_content = self.load(&previous)?;
+                let next_content = Diff::apply(&prev_content, &difference)?;
+                // check the checksum
+                if &Address::stamp(&next_content)?.0 != checksum { return None; }
+                return Some(next_content)
+            }
+        }
+    }
+
     // TODO: commit
     // NOTE: just local for now!
     pub fn update(&mut self, content: &Content) -> Option<()> {
-        // let address = self.store(content)?;
-        let branch = &mut self.local;
-        branch.update(self, content)?;
-        todo!()
+        self.store(content)?;
+        let history  = self.local.history(&content.identity())?;
+        let previous = self.load(&history.head)?;
+        self.local.update(&previous, content)?;
+        return Some(())
     }
 
-    pub fn register(&mut self, content: &Content) -> Option<()> {
+    pub fn register(&mut self, content: Content) -> Option<()> {
+        self.store(&content)?;
+        self.local.register(content)?;
         todo!()
     }
 }
@@ -97,19 +110,19 @@ impl Branch {
         }
     }
 
-    pub fn history(&self, content: &Content) -> Option<&History> {
-        self.histories.get(&content.identity())
+    pub fn history(&self, identity: &Identity) -> Option<&History> {
+        self.histories.get(identity)
     }
 
-    pub fn update(&mut self, datastore: &mut Datastore, content: &Content) -> Option<()> {
+    pub fn update(&mut self, previous: &Content, content: &Content) -> Option<()> {
         let history = self.histories.get_mut(&content.identity())?;
-        history.commit(datastore, content);
+        history.commit(previous, content);
         Some(())
     }
 
-    pub fn register(&mut self, datastore: &mut Datastore, content: Content) -> Option<()> {
+    pub fn register(&mut self, content: Content) -> Option<()> {
         let identity = content.identity();
-        let history = History::new(datastore, content)?;
+        let history = History::new(content)?;
 
         if self.histories.contains_key(&identity) { return None; }
         else { self.histories.insert(identity, history)?; }
@@ -129,9 +142,9 @@ pub struct History {
 
 impl History {
     /// Create a new history.
-    fn new(datastore: &mut Datastore, initial: Content) -> Option<History> {
-        let address = datastore.store(&initial)?;
-        let delta = Delta::base(datastore, initial)?;
+    fn new(initial: Content) -> Option<History> {
+        let address = Address::stamp(&initial)?.0;
+        let delta = Delta::base(initial)?;
 
         let mut deltas = HashMap::new();
         deltas.insert(address.clone(), delta);
@@ -142,14 +155,17 @@ impl History {
     /// Commit a delta onto the head history.
     /// Returns None if the delta can not be applied,
     /// Panics if it is passed a base delta, which should be unreachable.
-    fn commit(&mut self, datastore: &mut Datastore, content: &Content) -> Option<()> {
-        let previous = self.delta(&self.head)?.resolve(datastore)?;
-        let delta = Delta::new(datastore, &previous, content)?;
-        let address = datastore.store(content)?;
+    fn commit(&mut self, previous: &Content, next: &Content) -> Option<()> {
+        let delta = Delta::make(previous, next)?;
+
+        let address = if let Delta::Tip { previous, checksum, .. } = &delta {
+            if previous != &self.head { return None; }
+            checksum.clone()
+        } else { unreachable!() };
 
         self.deltas.insert(address.clone(), delta);
         self.head = address;
-        Some(())
+        return Some(());
     }
 
     pub fn delta(&self, address: &Address) -> Option<&Delta> {
@@ -182,15 +198,15 @@ pub enum Delta {
 
 /// Generated deltas must be stored in the datastore!
 impl Delta {
-    fn base(datastore: &mut Datastore, initial: Content) -> Option<Delta> {
-        let checksum = datastore.store(&initial)?;
+    fn base(initial: Content) -> Option<Delta> {
+        let checksum = Address::stamp(&initial)?.0;
         Some(Delta::Base { base: initial, checksum })
     }
 
     // calculate the diffs and addresses
-    fn new(datastore: &mut Datastore, previous: &Content, next: &Content) -> Option<Delta> {
-        let prev_addr = datastore.store(previous)?;
-        let next_addr = datastore.store(next)?;
+    fn make(previous: &Content, next: &Content) -> Option<Delta> {
+        let prev_addr = Address::stamp(previous)?.0;
+        let next_addr = Address::stamp(next)?.0;
         let diff = Diff::make(previous, next)?;
 
         Some(Delta::Tip {
@@ -198,19 +214,5 @@ impl Delta {
             difference: diff,
             checksum:   next_addr,
         })
-    }
-
-    fn resolve(&self, datastore: &mut Datastore) -> Option<Content> {
-        match self {
-            Delta::Base { base, .. } => Some(base.clone()),
-            Delta::Tip  { previous, difference, checksum } => {
-                // TODO: check datastore cache, then history.
-                let prev_content = datastore.load(previous)?;
-                let next_content = Diff::apply(&prev_content, difference)?;
-                // check the checksum
-                if &datastore.store(&next_content)? != checksum { return None; }
-                return Some(next_content)
-            }
-        }
     }
 }
