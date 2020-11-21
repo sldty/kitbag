@@ -9,10 +9,18 @@ fn messing_around() {
     );
     println!("{:#?}", datastore);
 
-    let agent = agent::Agent::new("Isaac Clayton");
-    let agent_2 = agent::Agent::new("Bob Smith");
-    datastore.register(&content::Content::Agent(agent));
-    datastore.register(&content::Content::Agent(agent_2));
+    let mut agent = agent::Agent::new("Isaac Clayton");
+    datastore.register(&content::Content::Agent(agent.clone()));
+
+    let mut party = namespace::Namespace::new(&mut agent, "Isaac's Party");
+    datastore.register(&content::Content::Namespace(party.clone()));
+
+    agent.display = "Isaac Buddy Clayton".to_string();
+    datastore.update(&content::Content::Agent(agent.clone()));
+    datastore.update(&content::Content::Agent(agent.clone()));
+
+    // let mut welcome = page::Page::child(&mut party, "Welcome", data::Data::N)
+
     println!("{:#?}", datastore);
 
     todo!()

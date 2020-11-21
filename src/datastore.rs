@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    handle::{Identity, Address},
+    handle::{Identity, Address, Location},
     diff::Diff,
     content::Content,
     agent::Agent,
@@ -81,7 +81,7 @@ impl Datastore {
     // NOTE: just local for now!
     pub fn update(&mut self, content: &Content) -> Option<()> {
         self.store(content)?;
-        let history  = self.local.history(&content.identity())?;
+        let history  = self.local.history(&content.location())?;
         let previous = self.load(&history.head)?;
         self.local.update(&previous, content)?;
         return Some(())
@@ -111,7 +111,7 @@ pub struct Branch {
     // identity: Identity,
     // TODO: identity should take context into account...
     /// All identities and their associated version history.
-    histories: HashMap<Identity, History>,
+    histories: HashMap<Location, History>,
 }
 
 impl Branch {
@@ -123,22 +123,22 @@ impl Branch {
         }
     }
 
-    pub fn history(&self, identity: &Identity) -> Option<&History> {
-        self.histories.get(identity)
+    pub fn history(&self, location: &Location) -> Option<&History> {
+        self.histories.get(location)
     }
 
     pub fn update(&mut self, previous: &Content, content: &Content) -> Option<()> {
-        let history = self.histories.get_mut(&content.identity())?;
+        let history = self.histories.get_mut(&content.location())?;
         history.commit(previous, content);
         Some(())
     }
 
     pub fn register(&mut self, content: Content) -> Option<()> {
-        let identity = content.identity();
+        let location = content.location();
         let history = History::new(content)?;
 
-        if self.histories.contains_key(&identity) { return None; }
-        else { self.histories.insert(identity, history)?; }
+        if self.histories.contains_key(&location) { return None; }
+        else { self.histories.insert(location, history)?; }
         Some(())
     }
 }

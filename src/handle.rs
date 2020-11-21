@@ -45,9 +45,16 @@ impl std::fmt::Debug for Tag {
     }
 }
 
-// /// A blob is a block of binary data.
-// #[derive(Clone, Serialize, Deserialize)]
-// pub struct Blob(Vec<u8>);
+/// A blob is a block of binary data.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Blob(Tag);
+
+impl Blob {
+    pub fn new(content: &Content) -> Option<Blob> {
+        let serialized = rmp_serde::to_vec(content).ok()?;
+        return Some(Blob(Tag(serialized)));
+    }
+}
 
 /// An address is the immutable handle of a specific version of an entity.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -70,15 +77,25 @@ impl Identity {
     pub fn tag(&self) -> Tag { self.0.clone() }
 }
 
+// TODO: restrict type?
+// only locations for:
+// - Agent
+// - Namespace
+// - Page
+// are possible, and:
+// Agent: 1 Id.
+// Namespace: 2 Id.s
+// Page 3 Id.s
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Location(Vec<Identity>);
 
 impl Location {
     pub fn root() -> Location { Location(vec![]) }
 
-    pub fn context(self, identity: Identity) -> Location {
-        let mut chain = self.0;
-        chain.push(identity);
+    pub fn find(&self, identity: &Identity) -> Location {
+        let mut chain = self.0.clone();
+        chain.push(identity.clone());
         return Location(chain);
     }
 }

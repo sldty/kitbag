@@ -1,31 +1,40 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
     agent::Agent,
     page::Page,
-    handle::Identity
+    handle::{Location, Identity}, data::Data
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Namespace {
     /// The owner of the namespace
-    agent:    Agent,
-    identity: Identity, // Namespace
-    title:    String,
-    root:     Identity, // Page
-    pages:    HashMap<Identity, Page>,
+    agent:    Location,
+    pub identity: Identity, // Namespace
+    pub title:    String,
+    roots:    Vec<Identity>, // Page
+    pages:    HashSet<Identity>, // Page
 }
 
 impl Namespace {
-    pub fn identity(&self) -> Identity { self.identity.clone() }
+    pub fn new(agent: &mut Agent, title: &str) -> Namespace {
+        let namespace = Namespace {
+            agent:    agent.location(),
+            identity: Identity::new(),
+            title:    title.to_string(),
+            roots:    vec![],
+            pages:    HashSet::new(),
+        };
 
-    pub fn context(&self) -> Agent {
-        self.agent.clone()
+        agent.register_namespace(&namespace);
+        return namespace;
     }
 
-    pub fn find(&self, identity: &Identity) -> Option<Page> {
-        Some(self.pages.get(identity)?.clone())
+    pub fn register_page(&mut self, page: &Page) {
+        self.pages.insert(page.identity.clone());
     }
+
+    pub fn location(&self) -> Location { self.agent.find(&self.identity) }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

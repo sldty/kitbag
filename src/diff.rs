@@ -27,7 +27,7 @@ pub enum Diff {
 impl Diff {
     pub fn make(prev: &Content, next: &Content) -> Option<Diff> {
         use Content::*;
-        if prev.identity() != next.identity() { return None; }
+        if prev.location() != next.location() { return None; }
         let diff: Diff = match (prev, next) {
             ( Agent(p),     Agent(n)     ) => Diff::Agent(AgentDiff::make(p, n)),
             ( Namespace(p), Namespace(n) ) => Diff::Namespace(NamespaceDiff::make(p, n)),
