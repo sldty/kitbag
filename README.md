@@ -37,6 +37,10 @@ What sorts of communication and collaboration?
 
 Like the world wide web, Solidarity is composed of pages, which can be shared with others. Pages can contain other pages
 
+> TODO
+
+![](https://raw.githubusercontent.com/slightknack/kitbag/master/mock.png)
+
 ### Content
 The first concept to understand in the concept of an *Agent*. An agent is a person, a group of people, a bot, or so on, whose identity is verified through public-key cryptography.
 
