@@ -35,11 +35,11 @@ Kitbag is the backend storage layer of Solidarity. Solidarity, as mentioned, is 
 
 What sorts of communication and collaboration?
 
-Like the world wide web, Solidarity is composed of pages, which can be shared with others. Pages can contain other pages
-
-> TODO
+Like the world wide web, Solidarity is composed of pages, which can be shared with others. Pages can contain other pages and so on. Users can share pages, which can be collaborated on in real-time - here's what that might look like:
 
 ![](https://raw.githubusercontent.com/slightknack/kitbag/master/mock.png)
+
+Note that this is just one type of page - a document, and that pages can also be chats, videos, spreadsheets, presentations, and so on.
 
 ### Content
 The first concept to understand in the concept of an *Agent*. An agent is a person, a group of people, a bot, or so on, whose identity is verified through public-key cryptography.
