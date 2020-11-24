@@ -91,8 +91,56 @@ Of course, each item of content has associated permissions. Each item has a base
 > TODO.
 
 ### Versioning and Diffing
+All Data is content addressed, meaning that it is identified by its hash, rather than a name. This means that all versions of any item of data are recorded.
 
-—
+This might seem a bit expensive, though. A one-letter change to a document changes its hash, so does that imply that we have to store the entire document with every change?
+
+Luckily enough, no. Instead of storing the new document along with the old document, we simply calculate the difference between the two documents. These differences are very small, and carry little associated metadata, making a one-letter-change, well, a one-letter change.
+
+This is done by recording the history of the document:
+
+> History of Some Document:
+> 0. Data Address → Delta Base
+> 1. Data Address → Delta Tip
+> 2. Data Address → Delta Tip
+> 3. ...
+
+Each item in history points to the item before it.
+
+What if we have a massive history?
+
+> History of Some Document:
+> 998. ...
+> 999. Data Address → Delta Tip
+
+Does this mean *all* the diffs have to be applied to construct the document? No!
+
+Because the datastore is content addressed, we first check to see if we have a cached version of the document on hand before going further back in history. These 'checkpoints,' so to speak, reduce the amount of work to retrieve any version of a document to constant, as opposed to linear, time.
+
+If data is also addressed by its hash, how do we compare successive versions of the same document?
+
+Each branch (as discussed earlier) maps content to their histories. This makes it easy to retrieve the history of any document. We can easily compare the differences between documents by using the diffing tools made readily available.
+
+## Usage
+Here's a brief example of what working with kitbag is like:
+
+```rust
+// The page is not a reference, the program is free to modify it however it likes.
+let mut page = datastore.load(page_location);
+page.data = Data::Document("Deleted everything".to_string());
+
+// Changes are recorded by updating the datastore.
+// This operation is relatively inexpensive, and can be called whenever necessary.
+datastore.update(page);
+```
+
+## Well?
+
+If you've read this far, thanks! You've probably formed some opinions on the topic - If you have any ideas, reach out 😉.
+
+---
+
+### Footnotes
 
 1. > **kitbag**  
    > n. A bag to hold a sailor's kit.  
