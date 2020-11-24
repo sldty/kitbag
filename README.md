@@ -52,7 +52,7 @@ Each namespace is composed of any number of *Pages*. Each namespace has a base p
 What can a page be, though? Each page contains a singular *Data*. This data may be something like a markdown document, or a text file. It can also be something more complex, like an image, a video, a chatroom, and so on. Further down the road, we plan to use some web-assembly and multi-format magic to allow pages to be arbitrary applications.
 
 ### Datastore
-All this information is kept in a *Datastore*. A datastore, or as we like to call it, *kitbag*, keeps track of two things:
+All this information is kept in a *Datastore*. A datastore, or as we like to call it, a *kitbag*, keeps track of two things:
 
 1. A content-addressed store of *Data*.
 2. The histories of ever-changing *Content* (like Agents, Namespaces, and Pages).
@@ -121,16 +121,21 @@ If data is also addressed by its hash, how do we compare successive versions of 
 
 Each branch (as discussed earlier) maps content to their histories. This makes it easy to retrieve the history of any document. We can easily compare the differences between documents by using the diffing tools made readily available.
 
+> How does the node know which diffs to send?
+
+Because the datastore keeps track of different branches, and nodes keep a record of the shared data peer nodes have, it is quite simple to calculate the difference between what you have and what the peer has. This difference is what is sent over the wire - because the peer node has the content you based the diff on, the peer does not need to request any more data from your node, and can simply directly apply the change to your branch.
+
 ## Usage
 Here's a brief example of what working with kitbag is like:
 
 ```rust
 // The page is not a reference, the program is free to modify it however it likes.
-let mut page = datastore.load(page_location);
+let mut page = datastore.get(page_location);
 page.data = Data::Document("Deleted everything".to_string());
 
 // Changes are recorded by updating the datastore.
-// This operation is relatively inexpensive, and can be called whenever necessary.
+// This operation is inexpensive for small changes
+// and should can be called whenever necessary.
 datastore.update(page);
 ```
 
