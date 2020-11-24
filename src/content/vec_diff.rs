@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 
+// TODO: look into copy-and-insert based diff systems?
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum Op<T> {
     Insert(Vec<T>), // insert Vec<T> at index
