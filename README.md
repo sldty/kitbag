@@ -101,10 +101,10 @@ This is done by recording the history of the document:
 
 > History of Some Document:
 >
-> 0 - Data Address → Delta Base
-> 1 - Data Address → Delta Tip
-> 2 - Data Address → Delta Tip
-> n - ...
+> 0 - Data Address → Delta Base  
+> 1 - Data Address → Delta Tip  
+> 2 - Data Address → Delta Tip  
+> n - ...  
 
 Each item in history points to the item before it.
 
@@ -112,8 +112,8 @@ What if we have a massive history?
 
 > History of Some Document:
 >
-> 998 - ...
-> 999 - Data Address → Delta Tip
+> 998 - ...  
+> 999 - Data Address → Delta Tip  
 
 Does this mean *all* the diffs have to be applied to construct the document? No!
 
