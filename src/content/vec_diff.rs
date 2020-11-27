@@ -77,6 +77,8 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
 
     // TODO: implement sub, correct modulo behaviour
 
+    // based on https://blog.robertelder.org/diff-algorithm/
+
     fn walk(
         prev:      &[T],
         next:      &[T],
