@@ -71,7 +71,140 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
         }
     }
 
+    fn k_bound(trial: isize, length: isize) -> isize {
+        trial - (0.max(trial - length) * 2)
+    }
+
+    // TODO: implement sub, correct modulo behaviour
+
+    fn walk(
+        prev:      &[T],
+        next:      &[T],
+        trial:     usize,
+        parity:    usize,
+        total_len: usize,
+        space:     usize,
+        g_table:   &mut [usize],
+        p_table:   &mut [usize],
+    ) -> Option<(usize, usize, usize, usize, usize)> {
+        // order the tables depending on the parity of the current iteration
+        let (c, d, m) = if parity == 1 {
+            (g_table, p_table, 1)
+        } else {
+            (p_table, g_table, -1)
+        };
+
+        // determine the lower and upper k bounds that will be searched
+        let k_range = (
+              -VecDiff::<T>::k_bound(trial as _, next.len() as _)
+            ..(VecDiff::<T>::k_bound(trial as _, prev.len() as _) + 1)
+        ).step_by(2);
+
+        // search the k bound range
+        for k in k_range {
+            // TODO: verify modulo behaviour is the same as python's
+            let (a_neg, a_pos) = (c[(k + 1) % space], c[(k - 1) % space]);
+            let mut a = if k == -trial || k != trial && a_neg < a_pos { a_pos } else { a_neg }
+            let mut b = a - k;
+            let (a_old, b_old) = (a, b);
+
+            // determine the number of same characters
+            while a < prev.len()
+               && b < next.len()
+               && VecDiff::sub(prev, parity, m, a)
+               == VecDiff::sub(next, parity, m, b)
+            {
+                a = a + 1;
+                b = b + 1;
+            }
+
+            c[k % space] = a;
+            let z = -(k - (prev.len() - next.len()));
+
+            if total_len % 2 == parity
+            && z >= -(trial - parity) // TODO: change to range check?
+            && z <=   trial - parity
+            && c[k % space] + d[z % space] >= prev.len() {
+                if parity == 1 {
+                    return Some((2 * trial - 1, a_old, b_old, a, b));
+                } else {
+                    return Some((
+                        2 * trial,
+                        prev.len() - a,
+                        next.len() - b,
+                        prev.len() - a_old,
+                        next.len() - b_old,
+                    ));
+                }
+            }
+        }
+
+        return None;
+    }
+
+    // TODO: struct for return type?
+    fn snake(prev: &[T], next: &[T]) -> (usize, usize, usize, usize, usize) {
+        let total_len = prev.len() + next.len();
+        let space = 2 * prev.len().min(next.len()) + 2;
+
+        let mut g_table = vec![0; space];
+        let mut p_table = vec![0; space];
+
+        // TODO: divide and round?
+        let trials = 1 + total_len / 2 + if total_len % 2 == 0 { 0 } else { 1 };
+        for trial in 0..trials {
+            for parity in &[1, 0] {
+                if let Some(result) = VecDiff::walk(
+                    prev, next,
+                    trial, *parity,
+                    total_len, space,
+                    &mut g_table, &mut p_table,
+                ) {
+                    return result;
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+    // TODO: swap so longer is first?
+    fn lcs(prev: &[T], next: &[T]) -> Vec<Op<T>> {
+        // return early if one is empty
+        if prev.is_empty() && next.is_empty() {
+            return vec![];
+        } else if !prev.is_empty() && next.is_empty() {
+            return vec![Op::Delete(prev.len())];
+        } else if !next.is_empty() && prev.is_empty() {
+            return vec![Op::Insert(next.to_vec())];
+        }
+
+        // find the 'distance' between the two texts
+
+        let (d, x, y, u, v) = VecDiff::snake(prev, next);
+        let mut diff = vec![];
+
+        // recursively divide-and-conquer the diff
+        if d > 1 || (x != u && y != v) {
+            diff.append(&mut VecDiff::lcs(&prev[..x], &next[..y]));
+            diff.push(Op::Equal(u - x)); // same as v - y
+            diff.append(&mut VecDiff::lcs(&prev[u..], &next[v..]));
+        } else if next.len() > prev.len() {
+            diff.push(Op::Equal(prev.len()));
+            diff.append(&mut VecDiff::lcs(&vec![], &next[prev.len()..]));
+        } else if prev.len() > next.len() {
+            diff.push(Op::Equal(next.len()));
+            diff.append(&mut VecDiff::lcs(&prev[next.len()..], &vec![]));
+        } else {
+            diff.push(Op::Equal(prev.len())); // same as next.len()
+        }
+
+        // return the constructed difference
+        return diff;
+    }
+
     // TODO: move pre-processing to different function?
+    // TODO: if diff will take a long time to calculate, delete all then insert all.
 
     pub fn make(prev: &[T], next: &[T]) -> VecDiff<T> {
         // if they're equal, there's no change...
