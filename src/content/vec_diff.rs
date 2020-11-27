@@ -75,6 +75,10 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
         trial - (0.max(trial - length) * 2)
     }
 
+    fn modulo(a: isize, b: usize) -> usize {
+        a.rem_euclid(b as isize) as usize
+    }
+
     // TODO: implement sub, correct modulo behaviour
 
     // based on https://blog.robertelder.org/diff-algorithm/
@@ -105,7 +109,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
         // search the k bound range
         for k in k_range {
             // TODO: verify modulo behaviour is the same as python's
-            let (a_neg, a_pos) = (c[(k + 1) % space], c[(k - 1) % space]);
+            let (a_neg, a_pos) = (c[(k + 1).rem_euclid(space as _) as _], c[(k - 1) % space]);
             let mut a = if k == -trial || k != trial && a_neg < a_pos { a_pos } else { a_neg }
             let mut b = a - k;
             let (a_old, b_old) = (a, b);
