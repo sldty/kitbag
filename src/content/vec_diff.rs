@@ -391,8 +391,22 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         return VecDiff::new(prefix, postfix, middle);
     }
 
-    pub fn apply(&self, prev: &Vec<T>) -> VecDiff<T> {
-        todo!()
+    pub fn apply(&self, prev: &[T]) -> Vec<T> {
+        let mut head = 0;
+        let mut next = vec![];
+
+        for op in self.0.iter() {
+            match op {
+                Op::Equal(n) => {
+                    next.append(&mut prev[head..(head + n)].to_vec());
+                    head += n;
+                },
+                Op::Delete(n) => { head += n; },
+                Op::Insert(i) => { next.append(&mut i.to_vec()) },
+            }
+        }
+
+        return next;
     }
 }
 
@@ -402,16 +416,13 @@ mod tests {
 
     #[test]
     fn trial() {
-        println!("generating data");
-
-        let a = (0..10000000).collect::<Vec<usize>>();
-        let b = (5000000..15000000).collect::<Vec<usize>>();
-
-        println!("making diff");
+        let a = [1, 3, 2, 5, 4];
+        let b = [1, 2, 3, 4, 5];
 
         let diff = VecDiff::make(&a, &b);
-
-        println!("done");
+        println!("{:?}", diff);
+        let b_recon = diff.apply(&a);
+        println!("init: {:?}\norig: {:?}\nnew:  {:?}", a, b, b_recon);
 
         panic!()
     }
