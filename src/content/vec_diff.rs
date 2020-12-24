@@ -101,6 +101,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
     }
 
     fn find(slice: &[T], sub_slice: &[T]) -> Option<usize> {
+        if sub_slice.len() == 0 { return None; }
         slice.windows(sub_slice.len())
             .position(|w| w == sub_slice)
     }
@@ -124,7 +125,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
                 long_post  = &long[(i + prefix)..];
                 short_pre  = &short[..(j - postfix)];
                 short_post = &short[(j + prefix)..];
-                sub_slice = VecDiff::find(short, seed[(j + 1)..]);
+                sub_slice = VecDiff::find(&short[(j + 1)..], seed);
             }
         }
 
@@ -141,11 +142,14 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         }
     }
 
-    fn half_match<'a, 'b>(prev: &'a [T], next: &'b [T]) ->
-        Option<(&'a [T], &'a [T], &'b [T], &'b [T], usize)>
+    fn half_match<'a>(prev: &'a [T], next: &'a [T]) ->
+        Option<(&'a [T], &'a [T], &'a [T], &'a [T], usize)>
     {
         let flip = prev.len() < next.len();
         let (long, short) = if !flip { (prev, next) } else { (next, prev) };
+
+        // pointless
+        if long.len() <= 1 || short.len() < 1 { return None; }
 
         let first_hm  = VecDiff::half_match_internal(long, short, (long.len() + 3) / 4);
         let second_hm = VecDiff::half_match_internal(long, short, (long.len() + 1) / 2);
@@ -154,14 +158,19 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
             (None,     None    ) => { return None; },
             (None,     Some(hm)) => hm,
             (Some(hm), None    ) => hm,
-            (Some(first_hm), Some(second_hm)) => if first_hm.len() > second_hm.len() {
+            (Some(first_hm), Some(second_hm)) => if first_hm.4 > second_hm.4 {
                 first_hm
             } else {
                 second_hm
             },
         };
 
-        todo!()
+        return if !flip {
+            Some(hm)
+        } else {
+            let (a, b, c, d, e) = hm;
+            Some((c, d, a, b, e))
+        }
     }
 
     // lcs based on https://blog.robertelder.org/diff-algorithm/
@@ -362,9 +371,11 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
             return VecDiff::new(prefix, postfix, edits);
         }
 
-        // TODO: implement half-length preprocessing step.
+        // half-length preprocessing step
+        // recursively subdivides the problem, allowing for faster processing in certain cases
         if let Some(hm) = VecDiff::half_match(prev, next) {
             let (prev_pre, prev_post, next_pre, next_post, common) = hm;
+
             let mut diff = vec![];
             diff.append(&mut VecDiff::make(prev_pre, next_pre).0);
             diff.push(Op::Equal(common));
@@ -372,16 +383,36 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
             return VecDiff::new(prefix, postfix, diff);
         }
 
-        // 'An O(ND) Difference Algorithm and Its Variations'
+        // longest common subsequence,
+        // based on 'An O(ND) Difference Algorithm and Its Variations'
         let middle = VecDiff::lcs(prev, next);
 
         // TODO: post-processing cleanup
-
         return VecDiff::new(prefix, postfix, middle);
-        todo!()
     }
 
     pub fn apply(&self, prev: &Vec<T>) -> VecDiff<T> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trial() {
+        println!("generating data");
+
+        let a = (0..10000000).collect::<Vec<usize>>();
+        let b = (5000000..15000000).collect::<Vec<usize>>();
+
+        println!("making diff");
+
+        let diff = VecDiff::make(&a, &b);
+
+        println!("done");
+
+        panic!()
     }
 }
