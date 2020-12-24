@@ -9,6 +9,8 @@ enum Op<T> where T: PartialEq + Clone {
 }
 
 impl<T> Op<T> where T: PartialEq + Clone + std::fmt::Debug {
+    /// If an op is of length 0, it contributes nothing to the reconstructed item
+    /// this function checks for this case.
     pub fn is_no_op(&self) -> bool {
         match self {
             Op::Insert(a) if a.is_empty() => true,
@@ -98,17 +100,83 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         }
     }
 
+    fn find(slice: &[T], sub_slice: &[T]) -> Option<usize> {
+        slice.windows(sub_slice.len())
+            .position(|w| w == sub_slice)
+    }
+
+    fn half_match_internal<'c, 'd>(long: &'c[T], short: &'d[T], i: usize) -> Option<(&'c [T], &'c [T], &'d [T], &'d [T], usize)> {
+        let seed = &long[i..(i + long.len() / 4)];
+        let mut best:       &[T] = &[];
+        let mut long_pre:   &[T] = &[];
+        let mut long_post:  &[T] = &[];
+        let mut short_pre:  &[T] = &[];
+        let mut short_post: &[T] = &[];
+        let mut sub_slice = VecDiff::find(short, seed);
+
+        while let Some(j) = sub_slice {
+            let prefix = VecDiff::common_prefix(&long[i..], &short[j..]);
+            let postfix = VecDiff::common_postfix(&long[..i], &short[..j]);
+
+            if best.len() < prefix + postfix {
+                best       = &short[(j - postfix)..(j + prefix)];
+                long_pre   = &long[..(i - postfix)];
+                long_post  = &long[(i + prefix)..];
+                short_pre  = &short[..(j - postfix)];
+                short_post = &short[(j + prefix)..];
+                sub_slice = VecDiff::find(short, seed[(j + 1)..]);
+            }
+        }
+
+        return if best.len() >= long.len() / 2 {
+            Some((
+                long_pre,
+                long_post,
+                short_pre,
+                short_post,
+                best.len(),
+            ))
+        } else {
+            None
+        }
+    }
+
+    fn half_match<'a, 'b>(prev: &'a [T], next: &'b [T]) ->
+        Option<(&'a [T], &'a [T], &'b [T], &'b [T], usize)>
+    {
+        let flip = prev.len() < next.len();
+        let (long, short) = if !flip { (prev, next) } else { (next, prev) };
+
+        let first_hm  = VecDiff::half_match_internal(long, short, (long.len() + 3) / 4);
+        let second_hm = VecDiff::half_match_internal(long, short, (long.len() + 1) / 2);
+
+        let hm = match (first_hm, second_hm) {
+            (None,     None    ) => { return None; },
+            (None,     Some(hm)) => hm,
+            (Some(hm), None    ) => hm,
+            (Some(first_hm), Some(second_hm)) => if first_hm.len() > second_hm.len() {
+                first_hm
+            } else {
+                second_hm
+            },
+        };
+
+        todo!()
+    }
+
+    // lcs based on https://blog.robertelder.org/diff-algorithm/
+
     // TODO: variable names
     fn sub(
-        text:   &[T],
+        slice:   &[T],
         parity: usize,
         flip:   isize,
         thing:  usize,
     ) -> &T {
-        let head = (1 - parity) * text.len();
+        let head = (1 - parity) * slice.len();
         let tail = flip * (thing as isize) + ((parity as isize) - 1);
         let index = (head as isize) + tail;
-        return &text[index as usize];
+        return &slice[index as usize];
     }
 
     fn k_bound(trial: isize, length: isize) -> isize {
@@ -118,10 +186,6 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
     fn modulo(a: isize, b: usize) -> usize {
         a.rem_euclid(b as isize) as usize
     }
-
-    // TODO: implement sub, correct modulo behaviour
-
-    // based on https://blog.robertelder.org/diff-algorithm/
 
     fn walk(
         prev:      &[T],
@@ -231,7 +295,6 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         }
 
         // find the 'distance' between the two texts
-
         let (d, x, y, u, v) = VecDiff::snake(prev, next);
         let mut diff = vec![];
 
@@ -300,6 +363,14 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         }
 
         // TODO: implement half-length preprocessing step.
+        if let Some(hm) = VecDiff::half_match(prev, next) {
+            let (prev_pre, prev_post, next_pre, next_post, common) = hm;
+            let mut diff = vec![];
+            diff.append(&mut VecDiff::make(prev_pre, next_pre).0);
+            diff.push(Op::Equal(common));
+            diff.append(&mut VecDiff::make(prev_post, next_post).0);
+            return VecDiff::new(prefix, postfix, diff);
+        }
 
         // 'An O(ND) Difference Algorithm and Its Variations'
         let middle = VecDiff::lcs(prev, next);

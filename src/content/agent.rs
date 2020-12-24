@@ -46,7 +46,7 @@ pub struct AgentDiff {
 }
 
 impl AgentDiff {
-    /// Finds the difference between two `Agent`s, and creates an `AgentDiff`
+    /// Finds the difference between two `Agent`s, and creates an `AgentDiff`.
     pub fn make(prev: &Agent, next: &Agent) -> AgentDiff {
         let display = if prev.display != next.display { Some(next.display.clone()) }
             else { None };
