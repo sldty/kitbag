@@ -71,6 +71,19 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
         }
     }
 
+    // TODO: variable names
+    fn sub(
+        text:   &[T],
+        parity: usize,
+        flip:   isize,
+        thing:  usize,
+    ) -> &T {
+        let head = (1 - parity) * text.len();
+        let tail = flip * (thing as isize) + ((parity as isize) - 1);
+        let index = (head as isize) + tail;
+        return &text[index as usize];
+    }
+
     fn k_bound(trial: isize, length: isize) -> isize {
         trial - (0.max(trial - length) * 2)
     }
@@ -108,10 +121,11 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
 
         // search the k bound range
         for k in k_range {
+            // println!("{}", k);
             // TODO: verify modulo behaviour is the same as python's
-            let (a_neg, a_pos) = (c[(k + 1).rem_euclid(space as _) as _], c[(k - 1) % space]);
-            let mut a = if k == -trial || k != trial && a_neg < a_pos { a_pos } else { a_neg }
-            let mut b = a - k;
+            let (a_pos, a_neg) = (c[VecDiff::<T>::modulo(k + 1, space)], c[VecDiff::<T>::modulo(k - 1, space)]);
+            let mut a = if k == -(trial as isize) || k != (trial as _) && a_neg < a_pos { a_pos } else { a_neg + 1 };
+            let mut b = ((a as isize) - k) as usize;
             let (a_old, b_old) = (a, b);
 
             // determine the number of same characters
@@ -124,13 +138,16 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
                 b = b + 1;
             }
 
-            c[k % space] = a;
-            let z = -(k - (prev.len() - next.len()));
+            println!("{} {}", a, b);
+
+            c[VecDiff::<T>::modulo(k, space)] = a;
+            let z = -(k - ((prev.len() as isize) - (next.len() as isize)));
 
             if total_len % 2 == parity
-            && z >= -(trial - parity) // TODO: change to range check?
-            && z <=   trial - parity
-            && c[k % space] + d[z % space] >= prev.len() {
+            && z >= -((trial as isize) - (parity as isize)) // TODO: change to range check?
+            && z <=   (trial as isize) - (parity as isize)
+            && c[VecDiff::<T>::modulo(k, space)] + d[VecDiff::<T>::modulo(z, space)] >= prev.len() {
+                println!("done");
                 if parity == 1 {
                     return Some((2 * trial - 1, a_old, b_old, a, b));
                 } else {
@@ -145,6 +162,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
             }
         }
 
+        println!("none");
         return None;
     }
 
@@ -158,8 +176,10 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
 
         // TODO: divide and round?
         let trials = 1 + total_len / 2 + if total_len % 2 == 0 { 0 } else { 1 };
+
         for trial in 0..trials {
             for parity in &[1, 0] {
+
                 if let Some(result) = VecDiff::walk(
                     prev, next,
                     trial, *parity,
@@ -214,31 +234,35 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
 
     pub fn make(prev: &[T], next: &[T]) -> VecDiff<T> {
         // if they're equal, there's no change...
-        if prev == next { return VecDiff(vec![]) }
-
-        // trim any matching data at the start and end of the slices.
-        let prefix = VecDiff::common_prefix(prev, next);
-        let prev = &prev[prefix..];
-        let next = &next[prefix..];
-
-        let postfix = VecDiff::common_postfix(prev, next);
-        let prev = &prev[..prev.len() - postfix];
-        let next = &next[..next.len() - postfix];
-
-        // single insertions and deletions are easy to handle at this point.
-        if prev.is_empty() {
-            return VecDiff::new(prefix, postfix, vec![Op::Insert(next.to_owned())]);
-        } else if next.is_empty() {
-            return VecDiff::new(prefix, postfix, vec![Op::Delete(prev.len())]);
-        }
-
-        // double insertions are a bit more complicated...
-        if let Some(edits) = VecDiff::double_edit(prev, next) {
-            return VecDiff::new(prefix, postfix, edits);
-        }
+        // if prev == next { return VecDiff(vec![]) }
+        //
+        // // trim any matching data at the start and end of the slices.
+        // let prefix = VecDiff::common_prefix(prev, next);
+        // let prev = &prev[prefix..];
+        // let next = &next[prefix..];
+        //
+        // let postfix = VecDiff::common_postfix(prev, next);
+        // let prev = &prev[..prev.len() - postfix];
+        // let next = &next[..next.len() - postfix];
+        //
+        // // single insertions and deletions are easy to handle at this point.
+        // if prev.is_empty() {
+        //     return VecDiff::new(prefix, postfix, vec![Op::Insert(next.to_owned())]);
+        // } else if next.is_empty() {
+        //     return VecDiff::new(prefix, postfix, vec![Op::Delete(prev.len())]);
+        // }
+        //
+        // // double insertions are a bit more complicated...
+        // if let Some(edits) = VecDiff::double_edit(prev, next) {
+        //     return VecDiff::new(prefix, postfix, edits);
+        // }
 
         // TODO: implement half-length preprocessing step.
+
         // TODO: implement 'An O(ND) Difference Algorithm and Its Variations'
+        let middle = VecDiff::lcs(prev, next);
+        return VecDiff::new(0, 0, middle);
+
         // TODO: post-processing cleanup
 
         todo!()
@@ -246,5 +270,21 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
 
     pub fn apply(&self, prev: &Vec<T>) -> VecDiff<T> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn experiments() {
+        let a = [1, 2, 3, 4, 5];
+        let b = [1, 2, 4, 3, 5];
+
+        let diff = VecDiff::make(&a, &b);
+
+        println!("{:#?}", diff);
+        panic!()
     }
 }
