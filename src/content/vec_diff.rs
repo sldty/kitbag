@@ -314,19 +314,3 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         todo!()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn experiments() {
-        let a: Vec<usize> = (0..10).collect();
-        let b: Vec<usize> = (5..15).collect();
-
-        let diff = VecDiff::make(&a, &b);
-        println!("diff: {:?}", diff);
-
-        panic!()
-    }
-}
