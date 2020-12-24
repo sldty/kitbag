@@ -2,10 +2,36 @@ use serde::{Serialize, Deserialize};
 
 // TODO: look into copy-and-insert based diff systems?
 #[derive(Debug, Clone, Serialize, Deserialize)]
-enum Op<T> {
+enum Op<T> where T: PartialEq + Clone {
     Insert(Vec<T>), // insert Vec<T> at index
     Delete(usize),  // delete the next n items
     Equal(usize),   // skip the next n items.
+}
+
+impl<T> Op<T> where T: PartialEq + Clone + std::fmt::Debug {
+    pub fn is_no_op(&self) -> bool {
+        match self {
+            Op::Insert(a) if a.is_empty() => true,
+            Op::Delete(n) if n == &0usize => true,
+            Op::Equal(n)  if n == &0usize => true,
+            _ => false,
+        }
+    }
+
+    pub fn join(&self, other: &Op<T>) -> Option<Op<T>> {
+        // if the two ops are the same, we combine them together.
+        let joined = match self {
+            Op::Insert(a) => if let Op::Insert(b)  = other {
+                let mut j = a.to_vec();
+                j.append(&mut b.to_vec());
+                Op::Insert(j)
+            } else { None? },
+            Op::Delete(n) => if let Op::Delete(m) = other { Op::Delete(n + m) } else { None? },
+            Op::Equal(n)  => if let Op::Equal(m)  = other { Op::Equal(n + m)  } else { None? },
+        };
+
+        return Some(joined);
+    }
 }
 
 /// Calculates the diff of a vec of items.
@@ -18,7 +44,7 @@ pub struct VecDiff<T>(Vec<Op<T>>) where T: PartialEq + Clone;
 
 // make t a slice type?
 
-impl<T> VecDiff<T> where T: PartialEq + Clone {
+impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
     // TODO: pre and post processing steps.
     // see: https://github.com/google/diff-match-patch
     // https://neil.fraser.name/writing/diff/myers.pdf
@@ -28,6 +54,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
         let mut diff = vec![Op::Equal(prefix)];
         diff.append(&mut middle.to_vec());
         diff.push(Op::Equal(postfix));
+        diff = VecDiff::compress(diff);
         return VecDiff(diff);
     }
 
@@ -121,10 +148,12 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
 
         // search the k bound range
         for k in k_range {
-            // println!("{}", k);
             // TODO: verify modulo behaviour is the same as python's
             let (a_pos, a_neg) = (c[VecDiff::<T>::modulo(k + 1, space)], c[VecDiff::<T>::modulo(k - 1, space)]);
-            let mut a = if k == -(trial as isize) || k != (trial as _) && a_neg < a_pos { a_pos } else { a_neg + 1 };
+            let mut a = if k == -(trial as isize)
+                        || k != (trial as _) && a_neg < a_pos
+                        { a_pos } else { a_neg + 1 };
+
             let mut b = ((a as isize) - k) as usize;
             let (a_old, b_old) = (a, b);
 
@@ -138,16 +167,13 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
                 b = b + 1;
             }
 
-            println!("{} {}", a, b);
-
             c[VecDiff::<T>::modulo(k, space)] = a;
             let z = -(k - ((prev.len() as isize) - (next.len() as isize)));
+            let range = (trial as isize) - (parity as isize);
 
             if total_len % 2 == parity
-            && z >= -((trial as isize) - (parity as isize)) // TODO: change to range check?
-            && z <=   (trial as isize) - (parity as isize)
+            && -range <= z && z <= range
             && c[VecDiff::<T>::modulo(k, space)] + d[VecDiff::<T>::modulo(z, space)] >= prev.len() {
-                println!("done");
                 if parity == 1 {
                     return Some((2 * trial - 1, a_old, b_old, a, b));
                 } else {
@@ -162,7 +188,6 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
             }
         }
 
-        println!("none");
         return None;
     }
 
@@ -229,42 +254,59 @@ impl<T> VecDiff<T> where T: PartialEq + Clone {
         return diff;
     }
 
+    fn compress(ops: Vec<Op<T>>) -> Vec<Op<T>> {
+        let mut prev: Option<Op<T>> = None;
+        let mut new = vec![];
+
+        for op in ops.into_iter().filter(|o| !o.is_no_op()) {
+            prev = if let Some(prev_op) = prev {
+                if let Some(combined) = prev_op.join(&op) { Some(combined) }
+                else { new.push(prev_op); Some(op) }
+            } else {
+                Some(op)
+            }
+        }
+
+        if let Some(op) = prev { new.push(op) };
+        return new;
+    }
+
     // TODO: move pre-processing to different function?
     // TODO: if diff will take a long time to calculate, delete all then insert all.
 
     pub fn make(prev: &[T], next: &[T]) -> VecDiff<T> {
         // if they're equal, there's no change...
-        // if prev == next { return VecDiff(vec![]) }
-        //
-        // // trim any matching data at the start and end of the slices.
-        // let prefix = VecDiff::common_prefix(prev, next);
-        // let prev = &prev[prefix..];
-        // let next = &next[prefix..];
-        //
-        // let postfix = VecDiff::common_postfix(prev, next);
-        // let prev = &prev[..prev.len() - postfix];
-        // let next = &next[..next.len() - postfix];
-        //
-        // // single insertions and deletions are easy to handle at this point.
-        // if prev.is_empty() {
-        //     return VecDiff::new(prefix, postfix, vec![Op::Insert(next.to_owned())]);
-        // } else if next.is_empty() {
-        //     return VecDiff::new(prefix, postfix, vec![Op::Delete(prev.len())]);
-        // }
-        //
-        // // double insertions are a bit more complicated...
-        // if let Some(edits) = VecDiff::double_edit(prev, next) {
-        //     return VecDiff::new(prefix, postfix, edits);
-        // }
+        if prev == next { return VecDiff(vec![]) }
+
+        // trim any matching data at the start and end of the slices.
+        let prefix = VecDiff::common_prefix(prev, next);
+        let prev = &prev[prefix..];
+        let next = &next[prefix..];
+
+        let postfix = VecDiff::common_postfix(prev, next);
+        let prev = &prev[..prev.len() - postfix];
+        let next = &next[..next.len() - postfix];
+
+        // single insertions and deletions are easy to handle at this point.
+        if prev.is_empty() {
+            return VecDiff::new(prefix, postfix, vec![Op::Insert(next.to_owned())]);
+        } else if next.is_empty() {
+            return VecDiff::new(prefix, postfix, vec![Op::Delete(prev.len())]);
+        }
+
+        // double insertions are a bit more complicated...
+        if let Some(edits) = VecDiff::double_edit(prev, next) {
+            return VecDiff::new(prefix, postfix, edits);
+        }
 
         // TODO: implement half-length preprocessing step.
 
-        // TODO: implement 'An O(ND) Difference Algorithm and Its Variations'
+        // 'An O(ND) Difference Algorithm and Its Variations'
         let middle = VecDiff::lcs(prev, next);
-        return VecDiff::new(0, 0, middle);
 
         // TODO: post-processing cleanup
 
+        return VecDiff::new(prefix, postfix, middle);
         todo!()
     }
 
@@ -279,12 +321,12 @@ mod tests {
 
     #[test]
     fn experiments() {
-        let a = [1, 2, 3, 4, 5];
-        let b = [1, 2, 4, 3, 5];
+        let a: Vec<usize> = (0..10).collect();
+        let b: Vec<usize> = (5..15).collect();
 
         let diff = VecDiff::make(&a, &b);
+        println!("diff: {:?}", diff);
 
-        println!("{:#?}", diff);
         panic!()
     }
 }
