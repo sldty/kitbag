@@ -1,5 +1,8 @@
 use serde::{Serialize, Deserialize};
-use crate::data::{PlainText, PlainTextDiff};
+use crate::{
+    diff::Diffable,
+    data::{Text, TextDiff}
+};
 
 // TODO: pub uses
 // TODO: figure out an efficient scheme to allow for the following:
@@ -12,10 +15,28 @@ use crate::data::{PlainText, PlainTextDiff};
 /// Right now I just have a Number dummy-type.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Data {
-    PlainText(PlainText),
+    Text(Text),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataDiff {
-    PlainTextDiff(PlainTextDiff)
+    TextDiff(TextDiff)
+}
+
+impl Diffable for Data {
+    type Diff = DataDiff;
+
+    fn make(&self, next: &Self) -> DataDiff {
+        match (self, next) {
+            (Data::Text(p), Data::Text(n))
+            => DataDiff::TextDiff(Diffable::make(p, n)),
+        }
+    }
+
+    fn apply(&self, diff: &DataDiff) -> Data {
+        match (self, diff) {
+            (Data::Text(p), DataDiff::TextDiff(d))
+            => Data::Text(Diffable::apply(p, d)),
+        }
+    }
 }
