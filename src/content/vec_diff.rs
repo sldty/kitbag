@@ -409,21 +409,3 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         return next;
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn trial() {
-        let a = [1, 3, 2, 5, 4];
-        let b = [1, 2, 3, 4, 5];
-
-        let diff = VecDiff::make(&a, &b);
-        println!("{:?}", diff);
-        let b_recon = diff.apply(&a);
-        println!("init: {:?}\norig: {:?}\nnew:  {:?}", a, b, b_recon);
-
-        panic!()
-    }
-}

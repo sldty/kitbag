@@ -87,6 +87,7 @@ impl Identity {
 // Namespace: 2 Id.s
 // Page 3 Id.s
 
+/// A Location is a chain of identities leading to an identity
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Location(Vec<Identity>);
 

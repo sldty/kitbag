@@ -1,8 +1,8 @@
 use serde::{Serialize, Deserialize};
 use crate::{
-    content::Namespace,
-    data::Data,
-    handle::{Location, Identity}
+    content::{Namespace, VecDiff},
+    data::{DataDiff, Data},
+    handle::{Location, Identity},
 };
 
 // TODO: linking/backlinking, full text search, etc.
@@ -48,10 +48,16 @@ impl Page {
 /// Represents a difference between two `Pages`.
 /// Calculates the underlying difference of the Data it contains.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PageDiff {}
+pub struct PageDiff {
+    namespace: Option<Location>,
+    parent:    Option<Option<Identity>>,
+    title:     Option<String>,
+    data:      DataDiff,
+    children:  VecDiff<Identity>,
+}
 
 impl PageDiff {
-    /// Finds the difference between two `Namespace`s, and creates an `NamespaceDiff`.
+    /// Finds the difference between two `Pages`s, and creates a `PageDiff`.
     pub fn make(prev: &Page, next: &Page) -> PageDiff {
         todo!()
     }

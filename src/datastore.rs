@@ -41,6 +41,7 @@ pub struct Datastore {
     cache: Cache,
 }
 
+/// Maps addresses to their serialized representation.
 pub type Cache = HashMap<Address, Vec<u8>>;
 
 impl Datastore {
@@ -129,6 +130,7 @@ impl Branch {
         }
     }
 
+    /// given a
     pub fn history(&self, location: &Location) -> Option<&History> {
         self.histories.get(location)
     }

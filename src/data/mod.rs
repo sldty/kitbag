@@ -1,7 +1,8 @@
 use serde::{Serialize, Deserialize};
 
 pub mod number;
-pub mod document;
+// pub mod document;
+pub mod plain_text;
 
 // TODO: pub uses
 // TODO: figure out an efficient scheme to allow for the following:
@@ -16,9 +17,10 @@ pub mod document;
 pub enum Data {
     Number(number::Number),
     // Body(document::Document),
+    PlainText(plain_text::PlainText),
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataDiff {
     NumberDiff(number::NumberDiff)
 }
