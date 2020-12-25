@@ -7,16 +7,6 @@ use crate::content::{
     Content,
 };
 
-// Just a word of warning:
-// I tried a lot to make traits work for this project.
-// But after hitting a lot of dead ends,
-// I realized that they, aside from technical reasons,
-// were *very* hard to get working as intended,
-// especiall with serde, typetag, and ownership tossed into the mix.
-// If you honestly think you can refactor this
-// to use traits in an elegant manner, be my guest.
-// For now, I find this to work just as well.
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Diff {
     Agent(AgentDiff),
