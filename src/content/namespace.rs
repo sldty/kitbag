@@ -2,7 +2,8 @@ use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
     handle::{Location, Identity},
-    content::{VecDiff, SetDiff, Agent, Page},
+    diff::{VecDiff, SetDiff},
+    content::{Agent, Page},
 };
 
 // TODO: permissions.

@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::{
-    content::{Namespace, VecDiff},
+    diff::VecDiff,
+    content::Namespace,
     data::{DataDiff, Data},
     handle::{Location, Identity},
 };

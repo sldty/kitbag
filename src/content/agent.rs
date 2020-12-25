@@ -2,7 +2,8 @@ use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
     content::Namespace,
-    handle::{Location, Identity}, content::SetDiff,
+    handle::{Location, Identity},
+    diff::SetDiff,
 };
 
 // TODO: make into trait or enum

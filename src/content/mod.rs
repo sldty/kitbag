@@ -1,12 +1,7 @@
-pub mod set_diff;
-pub mod vec_diff;
-
 pub mod agent;
 pub mod namespace;
 pub mod page;
 
-pub use set_diff::SetDiff;
-pub use vec_diff::VecDiff;
 pub use agent::{Agent, AgentDiff};
 pub use namespace::{Namespace, NamespaceDiff};
 pub use page::{Page, PageDiff};

@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use crate::content::VecDiff;
+use crate::diff::VecDiff;
 
 // A plain text file, like some code
 #[derive(Debug, Clone, Serialize, Deserialize)]
