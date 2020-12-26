@@ -5,7 +5,7 @@ use crate::{
     data::{DataDiff, Data},
     handle::{Location, Identity},
 };
-use super::Hierarchy;
+use super::{Contentable, Hierarchy};
 
 // TODO: linking/backlinking, full text search, etc.
 /// Represents a singular `Page` of user-provided `Data`,
@@ -14,34 +14,38 @@ use super::Hierarchy;
 /// So, for instance, you could copy a video's id, and embed it in a document.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Page {
-    hierarchy: Hierarchy<Namespace, ()>,
-    pub identity: Identity,
+    pub hierarchy: Hierarchy<Namespace, ()>,
+    pub page_parent: Option<Identity>, // none if root page
+    pub page_children: Vec<Identity>,
     pub title: String,
     pub data:  Data, // Content
 }
 
 impl Page {
-    // TODO: root?
-
     /// Creates a child `Page` within the context of a `Namespace`.
-    pub fn child(&mut self, namespace: &mut Namespace, title: &str, data: Data) -> Page {
+    pub fn child(&mut self, namespace: &mut Namespace, title: String, data: Data) -> Page {
         let page = Page {
-            namespace: self.namespace.clone(),
-            identity:  Identity::new(),
-            parent:    Some(self.identity.clone()),
-            title:     title.to_string(),
-            data,
-            children:  vec![],
+            hierarchy:     Hierarchy::new(namespace),
+            page_parent:   Some(Contentable::identity(self)),
+            page_children: vec![],
+            title:         title,
+            data:          data,
+
         };
 
-        self.children.push(page.identity.clone());
-        // namespace.register_page(&page);
-        panic!();
+        namespace.hierarchy.register(&page);
+        self.page_children.push(Contentable::identity(self));
+
         return page;
     }
+}
 
-    /// Returns the contextual location of the `Page`.
-    pub fn location(&self) -> Location { self.namespace.cd(&self.identity) }
+impl Contentable for Page {
+    fn context(&self) -> Location {
+        Contentable::location(&self.hierarchy.parent)
+    }
+
+    fn identity(&self) -> Identity { self.hierarchy.identity }
 }
 
 // TODO: call out to Diff to calculate the difference between two Data

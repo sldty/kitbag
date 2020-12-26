@@ -15,7 +15,7 @@ use crate::{
 pub struct Namespace {
     // TODO: remove once permissions are implemented?
     /// The owner of the namespace
-    hierarchy: Hierarchy<Agent, Page>,
+    pub hierarchy: Hierarchy<Agent, Page>,
     pub identity: Identity,
     pub title: String,
 }

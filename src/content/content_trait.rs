@@ -4,10 +4,7 @@ use std::{
 };
 
 use serde::{Serialize, Deserialize};
-
-use crate::{
-    handle::{Identity, Location}
-};
+use crate::handle::{Identity, Location};
 
 pub trait Contentable {
     fn context(&self)  -> Location;
@@ -33,26 +30,28 @@ pub struct Hierarchy<A, B> where
     A: Contentable,
     B: Contentable,
 {
-    pub parent:      Identity,
-    pub children:    HashSet<Identity>,
-    _phantom_parent: PhantomData<A>,
-    _phantom_child:  PhantomData<B>,
+    pub parent:     Identity,
+    pub identity:   Identity,
+    pub children:   HashSet<Identity>,
+    phantom_parent: PhantomData<A>,
+    phantom_child:  PhantomData<B>,
 }
 
 impl<A, B> Hierarchy<A, B> where
     A: Contentable,
     B: Contentable,
 {
-    pub fn new(parent: A) -> Hierarchy<A, B> {
+    pub fn new(parent: &A) -> Hierarchy<A, B> {
         Hierarchy {
-            parent:          Contentable::identity(&parent),
-            children:        HashSet::new(),
-            _phantom_parent: PhantomData,
-            _phantom_child:  PhantomData,
+            parent:         Contentable::identity(parent),
+            identity:       Identity::new(),
+            children:       HashSet::new(),
+            phantom_parent: PhantomData,
+            phantom_child:  PhantomData,
         }
     }
 
-    pub fn register(&mut self, child: &mut B) {
+    pub fn register(&mut self, child: &B) {
         self.children.insert(Contentable::identity(child));
     }
 }
