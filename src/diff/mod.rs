@@ -7,4 +7,4 @@ pub use diff::Diff;
 pub use set_diff::SetDiff;
 pub use vec_diff::VecDiff;
 
-pub use diff_trait::Diffable;
+pub use diff_trait::{Diffable, Atom};

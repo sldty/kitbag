@@ -4,7 +4,10 @@ use std::{
 };
 
 use serde::{Serialize, Deserialize};
-use crate::handle::{Identity, Location};
+use crate::{
+    diff::{Diffable, SetDiff, Atom},
+    handle::{Identity, Location}
+};
 
 pub trait Contentable {
     fn context(&self)  -> Location;
@@ -30,7 +33,7 @@ pub struct Hierarchy<A, B> where
     A: Contentable,
     B: Contentable,
 {
-    pub parent:     Identity,
+    pub parent:     Location,
     pub identity:   Identity,
     pub children:   HashSet<Identity>,
     phantom_parent: PhantomData<A>,
@@ -43,7 +46,7 @@ impl<A, B> Hierarchy<A, B> where
 {
     pub fn new(parent: &A) -> Hierarchy<A, B> {
         Hierarchy {
-            parent:         Contentable::identity(parent),
+            parent:         Contentable::location(parent),
             identity:       Identity::new(),
             children:       HashSet::new(),
             phantom_parent: PhantomData,
@@ -53,5 +56,39 @@ impl<A, B> Hierarchy<A, B> where
 
     pub fn register(&mut self, child: &B) {
         self.children.insert(Contentable::identity(child));
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HierarchyDiff<A, B> {
+    parent:     Option<Location>,
+    children:   SetDiff<Identity>,
+    phantom_parent: PhantomData<A>,
+    phantom_child:  PhantomData<B>,
+}
+
+impl<A, B> Diffable for Hierarchy<A, B> where
+    A: Contentable,
+    B: Contentable,
+{
+    type Diff = HierarchyDiff<A, B>;
+
+    fn make(prev: &Hierarchy<A, B>, next: &Hierarchy<A, B>) -> HierarchyDiff<A, B> {
+        HierarchyDiff {
+            parent:         Diffable::make(&Atom::new(prev.parent), &Atom::new(next.parent)),
+            children:       Diffable::make(&prev.children, &next.children),
+            phantom_parent: PhantomData,
+            phantom_child:  PhantomData,
+        }
+    }
+
+    fn apply(prev: &Hierarchy<A, B>, diff: &HierarchyDiff<A, B>) -> Hierarchy<A, B> {
+        Hierarchy {
+            parent:         Diffable::apply(&Atom::new(prev.parent), &diff.parent).into_inner(),
+            identity:       prev.identity,
+            children:       Diffable::apply(&prev.children, &diff.children),
+            phantom_parent: PhantomData,
+            phantom_child:  PhantomData,
+        }
     }
 }

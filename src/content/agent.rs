@@ -4,10 +4,11 @@ use crate::{
     content::{
         Contentable,
         Hierarchy,
+        HierarchyDiff,
         Namespace,
     },
     handle::{Location, Identity},
-    diff::{Diffable, SetDiff},
+    diff::{Diffable, Atom},
 };
 
 // TODO: make into trait or enum
@@ -50,8 +51,9 @@ impl Contentable for Agent {
 /// Should be used in the context of a `Delta`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentDiff {
-    display: Option<String>,
-    namespaces_diff: SetDiff<Identity>,
+    hierarchy: HierarchyDiff<(), Namespace>,
+    identity:  Option<Identity>,
+    display:   Option<String>,
 }
 
 impl Diffable for Agent {
@@ -59,20 +61,19 @@ impl Diffable for Agent {
 
     /// Finds the difference between two `Agent`s, and creates an `AgentDiff`.
     fn make(prev: &Agent, next: &Agent) -> AgentDiff {
-        let display = if prev.display != next.display { Some(next.display.clone()) }
-            else { None };
-
-        let namespaces_diff = Diffable::make(&prev.namespaces, &next.namespaces);
-        AgentDiff { display, namespaces_diff }
+        AgentDiff {
+            hierarchy: Diffable::make(&prev.hierarchy, &next.hierarchy),
+            identity:  Diffable::make(&Atom::new(prev.identity), &Atom::new(next.identity)),
+            display:   Diffable::make(&Atom::new(prev.display),  &Atom::new(next.display)),
+        }
     }
 
     /// Applies this diff to another `Agent` to create a new `Agent`.
     fn apply(prev: &Agent, diff: &AgentDiff) -> Agent {
-        let display = if let Some(new) = &diff.display { new.to_string() }
-            else { prev.display.to_string() };
-
-        let identity = prev.identity.clone();
-        let namespaces = Diffable::apply(&prev.namespaces, &diff.namespaces_diff);
-        Agent { display, identity, namespaces }
+        Agent {
+            hierarchy: Diffable::apply(&prev.hierarchy, &diff.hierarchy),
+            identity:  Diffable::apply(&Atom::new(prev.identity), &diff.identity).into_inner(),
+            display:   Diffable::apply(&Atom::new(prev.display),  &diff.display).into_inner(),
+        }
     }
 }

@@ -41,10 +41,7 @@ impl Page {
 }
 
 impl Contentable for Page {
-    fn context(&self) -> Location {
-        Contentable::location(&self.hierarchy.parent)
-    }
-
+    fn context(&self)  -> Location { self.hierarchy.parent   }
     fn identity(&self) -> Identity { self.hierarchy.identity }
 }
 
@@ -53,11 +50,11 @@ impl Contentable for Page {
 /// Calculates the underlying difference of the Data it contains.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageDiff {
-    namespace: Option<Location>,
-    parent:    Option<Option<Identity>>,
-    title:     Option<String>,
-    data:      DataDiff,
-    children:  VecDiff<Identity>,
+    pub hierarchy: Hierarchy<Namespace, ()>,
+    pub page_parent: Option<Identity>, // none if root page
+    pub page_children: Vec<Identity>,
+    pub title: String,
+    pub data:  Data, // Content
 }
 
 impl Diffable for Page {
