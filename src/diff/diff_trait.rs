@@ -17,8 +17,8 @@ pub struct Atom<T>(T) where T: std::fmt::Debug + Clone + PartialEq;
 impl<T> Atom<T> where
     T: std::fmt::Debug + Clone + PartialEq
 {
-    pub fn new(item: T)     -> Atom<T> { Atom(item) }
-    pub fn into_inner(self) -> T       { self.0     }
+    pub fn new(item: T)     -> Atom<T> { Atom(item)        }
+    pub fn into_inner(&self) -> T      { self.0.to_owned() }
 }
 
 impl<T> Diffable for Atom<T> where

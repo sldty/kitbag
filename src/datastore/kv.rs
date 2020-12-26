@@ -26,7 +26,7 @@ impl KV {
         todo!()
     }
 
-    pub fn load(&mut self, address: &Address) -> Option<Vec<u8>> {
+    pub fn load(&self, address: &Address) -> Option<Vec<u8>> {
         todo!()
     }
 

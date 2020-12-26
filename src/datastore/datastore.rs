@@ -47,7 +47,7 @@ impl Datastore {
         }
     }
 
-    fn load(&mut self, address: &Address) -> Option<Content> {
+    fn load(&self, address: &Address) -> Option<Content> {
         // TODO: schedule on network if not in cache?
         let serialized = self.kv.load(address)?;
         let object = rmp_serde::from_slice(&serialized).ok()?;

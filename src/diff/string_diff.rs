@@ -9,7 +9,7 @@ impl Lines {
     pub fn new(string: String) -> Lines  { Lines(string) }
     pub fn into_inner(self)    -> String { self.0        }
 
-    pub fn lines_inclusive(self) -> Vec<String> {
+    pub fn lines_inclusive(&self) -> Vec<String> {
         self.0.split("\n").map(|x| x.to_string() + "\n").collect()
     }
 }
