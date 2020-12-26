@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use crate::{
     content::Namespace,
     handle::{Location, Identity},
-    diff::SetDiff,
+    diff::{Diffable, SetDiff},
 };
 
 // TODO: make into trait or enum
@@ -46,23 +46,25 @@ pub struct AgentDiff {
     namespaces_diff: SetDiff<Identity>,
 }
 
-impl AgentDiff {
+impl Diffable for Agent {
+    type Diff = AgentDiff;
+
     /// Finds the difference between two `Agent`s, and creates an `AgentDiff`.
-    pub fn make(prev: &Agent, next: &Agent) -> AgentDiff {
+    fn make(prev: &Agent, next: &Agent) -> AgentDiff {
         let display = if prev.display != next.display { Some(next.display.clone()) }
             else { None };
 
-        let namespaces_diff = SetDiff::make(&prev.namespaces, &next.namespaces);
+        let namespaces_diff = Diffable::make(&prev.namespaces, &next.namespaces);
         AgentDiff { display, namespaces_diff }
     }
 
     /// Applies this diff to another `Agent` to create a new `Agent`.
-    pub fn apply(&self, prev: &Agent) -> Agent {
-        let display = if let Some(new) = &self.display { new.to_string() }
+    fn apply(prev: &Agent, diff: &AgentDiff) -> Agent {
+        let display = if let Some(new) = &diff.display { new.to_string() }
             else { prev.display.to_string() };
 
         let identity = prev.identity.clone();
-        let namespaces = self.namespaces_diff.apply(&prev.namespaces);
+        let namespaces = Diffable::apply(&prev.namespaces, &diff.namespaces_diff);
         Agent { display, identity, namespaces }
     }
 }

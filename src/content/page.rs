@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use crate::{
-    diff::VecDiff,
+    diff::{Diffable, VecDiff},
     content::Namespace,
     data::{DataDiff, Data},
     handle::{Location, Identity},
@@ -57,16 +57,14 @@ pub struct PageDiff {
     children:  VecDiff<Identity>,
 }
 
-impl PageDiff {
-    /// Finds the difference between two `Pages`s, and creates a `PageDiff`.
-    pub fn make(prev: &Page, next: &Page) -> PageDiff {
+impl Diffable for Page {
+    type Diff = PageDiff;
+
+    fn make(prev: &Self, next: &Self) -> Self::Diff {
         todo!()
     }
 
-    // TODO: option types to indicate a conflict?
-
-    /// Applies this diff to another `Page` to create a new `Page`.
-    pub fn apply(&self, prev: &Page) -> Page {
+    fn apply(prev: &Self, diff: &Self::Diff) -> Self {
         todo!()
     }
 }

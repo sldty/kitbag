@@ -17,14 +17,17 @@ fn lines_inclusive(string: &str) -> Vec<String> {
 impl Diffable for Text {
     type Diff = TextDiff;
 
-    fn make(&self, next: &Text) -> TextDiff {
-        TextDiff(VecDiff::make(
-            &lines_inclusive(&self.0),
+    fn make(prev: &Self, next: &Text) -> TextDiff {
+        TextDiff(Diffable::make(
+            &lines_inclusive(&prev.0),
             &lines_inclusive(&next.0),
         ))
     }
 
-    fn apply(&self, diff: &TextDiff) -> Text {
-        Text(diff.0.apply(&lines_inclusive(&self.0)).join(""))
+    fn apply(prev: &Self, diff: &TextDiff) -> Text {
+        Text(Diffable::apply(
+            &lines_inclusive(&prev.0),
+            &diff.0,
+        ).join(""))
     }
 }

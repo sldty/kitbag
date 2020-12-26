@@ -6,24 +6,20 @@ use crate::{
 
 // TODO: make deltas content so that they can be resolved!
 
+/// A Delta is either a Base or a Tip.
+/// A Base is the initial version, to which all changes are applied.
+/// A Tip is applied to either a Base (initial version) or another Tip
+/// to create a new content
 #[derive(Debug)]
 pub enum Delta {
-    /// The initial version, to which all changes are applied.
     Base {
-        /// The base unit of content itself upon which all deltas are applied.
-        base: Content,
-        /// A hash of the base unit of content
+        base:     Content,
         checksum: Address,
     },
-    /// A tip applied to either a base (initial version) or another tip
-    /// to create a new content
     Tip {
-        /// The address of the previous version's content.
-        previous: Address,
-        /// A diff that can be applied to the previous version to get the next version.
+        previous:   Address,
         difference: Diff,
-        /// A hash of the content after the diff is applied
-        checksum: Address,
+        checksum:   Address,
     }
 }
 

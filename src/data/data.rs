@@ -26,15 +26,15 @@ pub enum DataDiff {
 impl Diffable for Data {
     type Diff = DataDiff;
 
-    fn make(&self, next: &Self) -> DataDiff {
-        match (self, next) {
+    fn make(prev: &Data, next: &Data) -> DataDiff {
+        match (prev, next) {
             (Data::Text(p), Data::Text(n))
             => DataDiff::TextDiff(Diffable::make(p, n)),
         }
     }
 
-    fn apply(&self, diff: &DataDiff) -> Data {
-        match (self, diff) {
+    fn apply(prev: &Data, diff: &DataDiff) -> Data {
+        match (prev, diff) {
             (Data::Text(p), DataDiff::TextDiff(d))
             => Data::Text(Diffable::apply(p, d)),
         }

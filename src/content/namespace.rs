@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
     handle::{Location, Identity},
-    diff::{VecDiff, SetDiff},
+    diff::{VecDiff, SetDiff, Diffable},
     content::{Agent, Page},
 };
 
@@ -59,14 +59,16 @@ pub struct NamespaceDiff {
     pages: SetDiff<Identity>,
 }
 
-impl NamespaceDiff {
-    /// Finds the difference between two `Namespace`s, and creates an `NamespaceDiff`.
-    pub fn make(prev: &Namespace, next: &Namespace) -> NamespaceDiff {
+impl Diffable for Namespace {
+    type Diff = NamespaceDiff;
+
+    /// Finds the difference between two `Namespaces`s, and creates an `Namespaces`.
+    fn make(prev: &Namespace, next: &Namespace) -> NamespaceDiff {
         todo!()
     }
 
-    /// Applies this diff to another `Namespace` to create a new `Namespace`.
-    pub fn apply(&self, prev: &Namespace) -> Namespace {
+    /// Applies this diff to another `Agent` to create a new `Agent`.
+    fn apply(prev: &Namespace, diff: &NamespaceDiff) -> Namespace {
         todo!()
     }
 }

@@ -6,6 +6,7 @@ use crate::content::{
     NamespaceDiff,
     Content,
 };
+use crate::diff::Diffable;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Diff {
@@ -19,9 +20,9 @@ impl Diff {
         use Content::*;
         if prev.location() != next.location() { return None; }
         let diff: Diff = match (prev, next) {
-            ( Agent(p),     Agent(n)     ) => Diff::Agent(AgentDiff::make(p, n)),
-            ( Namespace(p), Namespace(n) ) => Diff::Namespace(NamespaceDiff::make(p, n)),
-            ( Page(p),      Page(n)      ) => Diff::Page(PageDiff::make(p, n)),
+            ( Agent(p),     Agent(n)     ) => Diff::Agent(Diffable::make(p, n)),
+            ( Namespace(p), Namespace(n) ) => Diff::Namespace(Diffable::make(p, n)),
+            ( Page(p),      Page(n)      ) => Diff::Page(Diffable::make(p, n)),
             _ => return None,
         };
         return Some(diff);
@@ -30,9 +31,9 @@ impl Diff {
     pub fn apply(tip: &Content, diff: &Diff) -> Option<Content> {
         use Content::*;
         let applied: Content = match (tip, diff) {
-            ( Agent(s),     Diff::Agent(d)     ) => Agent(d.apply(s)),
-            ( Namespace(s), Diff::Namespace(d) ) => Namespace(d.apply(s)),
-            ( Page(s),      Diff::Page(d)      ) => Page(d.apply(s)),
+            ( Agent(s),     Diff::Agent(d)     ) => Agent(Diffable::apply(s, d)),
+            ( Namespace(s), Diff::Namespace(d) ) => Namespace(Diffable::apply(s, d)),
+            ( Page(s),      Diff::Page(d)      ) => Page(Diffable::apply(s, d)),
             _ => return None,
         };
         return Some(applied);

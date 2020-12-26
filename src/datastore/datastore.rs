@@ -7,7 +7,7 @@ use crate::{
     handle::Address,
     diff::Diff,
     content::Content,
-    datastore::{Delta, Branch},
+    datastore::{KV, Delta, Branch},
 };
 
 // TODO: how to make it so the user does not have to have the whole history on-hahd
@@ -36,41 +36,36 @@ pub struct Datastore {
     // branches: HashMap<Identity, Branch>,
     // TODO: build directory hiererchy to aviod rewriting whole datastore.
     /// The write-path of this database.
-    path: PathBuf,
-    /// Recently accessed addresses for increased efficiency.
-    cache: Cache,
+    kv: KV,
 }
-
-/// Maps addresses to their serialized representation.
-pub type Cache = HashMap<Address, Vec<u8>>;
 
 impl Datastore {
     pub fn new(path: &Path) -> Datastore {
         Datastore {
             local: Branch::new(),
-            path: path.to_path_buf(),
-            cache: HashMap::new(),
+            kv: KV::new(path),
         }
     }
 
-    fn load(&self, address: &Address) -> Option<Content> {
+    fn load(&mut self, address: &Address) -> Option<Content> {
         // TODO: schedule on network if not in cache?
-        let serialized = self.cache.get(address)?;
-        let object = rmp_serde::from_slice(serialized).ok()?;
+        let serialized = self.kv.load(address)?;
+        let object = rmp_serde::from_slice(&serialized).ok()?;
         return Some(object);
     }
 
     fn store(&mut self, content: &Content) -> Option<Address> {
         // TODO: store on disk
         let (address, serialized) = Address::stamp(content)?;
-        if !self.cache.contains_key(&address) {
-            self.cache.insert(address.clone(), serialized);
+        if !self.kv.has(&address) {
+            todo!()
+            // self.kv.store(address.clone(), serialized);
         }
         return Some(address);
     }
 
     // TODO: make more general than deltas
-    fn resolve(&self, delta: &Delta) -> Option<Content> {
+    fn resolve(&mut self, delta: &Delta) -> Option<Content> {
         match delta {
             Delta::Base { base, .. } => Some(base.clone()),
             Delta::Tip  { previous, difference, checksum } => {

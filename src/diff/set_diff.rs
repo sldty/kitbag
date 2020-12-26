@@ -4,6 +4,7 @@ use std::{
 };
 
 use serde::{Serialize, Deserialize};
+use crate::diff::Diffable;
 
 /// The difference between two sets of types.
 /// Works by recording the additions and deletions to the two sets.
@@ -13,11 +14,13 @@ pub struct SetDiff<T> where T: Eq + Hash + Clone {
     removed: HashSet<T>,
 }
 
-impl<T> SetDiff<T> where T: Eq + Hash + Clone {
+impl<T> Diffable for HashSet<T> where T: Eq + Hash + Clone {
+    type Diff = SetDiff<T>;
+
     /// Given two sets, this will calculate the additions added
     /// to `next` when compared to `prev`, as well as the deletions,
     /// Which are then used to construct a new `SetDiff`.
-    pub fn make(prev: &HashSet<T>, next: &HashSet<T>) -> SetDiff<T> {
+    fn make(prev: &Self, next: &Self) -> Self::Diff {
         let added = next.difference(&prev)
             .map(|i| i.clone())
             .collect::<HashSet<T>>();
@@ -26,17 +29,17 @@ impl<T> SetDiff<T> where T: Eq + Hash + Clone {
             .map(|i| i.clone())
             .collect::<HashSet<T>>();
 
-        SetDiff { added, removed }
-    }
+        SetDiff { added, removed }    }
 
     /// Creates a new set by first removing all entries specified to be removed from a set,
     /// then adding the ones that were not in the original.
-    pub fn apply(&self, prev: &HashSet<T>) -> HashSet<T> {
-        prev.difference(&self.removed)
+    fn apply(prev: &Self, diff: &Self::Diff) -> Self {
+        prev.difference(&diff.removed)
             .map(|i| i.clone())
             .collect::<HashSet<T>>()
-            .union(&self.added)
+            .union(&diff.added)
             .map(|i| i.clone())
             .collect::<HashSet<T>>()
     }
+
 }
