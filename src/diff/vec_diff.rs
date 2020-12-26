@@ -426,19 +426,3 @@ impl<T> Diffable for Vec<T> where
         VecDiff::apply(diff, prev)
     }
 }
-
-pub struct Chars(String);
-pub struct Words(String);
-pub struct Lines(String);
-
-impl Diffable for Chars {
-    type Diff = VecDiff<char>;
-
-    fn make(prev: &Self, next: &Self) -> Self::Diff {
-        todo!()
-    }
-
-    fn apply(prev: &Self, diff: &Self::Diff) -> Self {
-        todo!()
-    }
-}
