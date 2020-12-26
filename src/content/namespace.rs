@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use crate::{
     handle::{Location, Identity},
     diff::{VecDiff, SetDiff, Diffable},
-    content::{Agent, Page},
+    content::{Contentable, Hierarchy, Agent, Page},
 };
 
 // TODO: permissions.
@@ -15,37 +15,36 @@ use crate::{
 pub struct Namespace {
     // TODO: remove once permissions are implemented?
     /// The owner of the namespace
-    agent:        Location,
-    pub identity: Identity, // Namespace
-    pub title:    String,
-    roots:        Vec<Identity>, // Page
-    pages:        HashSet<Identity>, // Page
+    hierarchy: Hierarchy<Agent, Page>,
+    pub identity: Identity,
+    pub title: String,
 }
 
 impl Namespace {
     /// Given an `Agent`, creates a new namespace, and updates the `Agent`.
     pub fn new(agent: &mut Agent, title: &str) -> Namespace {
-        let namespace = Namespace {
-            agent:    agent.location(),
-            identity: Identity::new(),
-            title:    title.to_string(),
-            roots:    vec![],
-            pages:    HashSet::new(),
-        };
+        // let namespace = Namespace {
+        //     agent:    agent.location(),
+        //     identity: Identity::new(),
+        //     title:    title.to_string(),
+        //     roots:    vec![],
+        //     pages:    HashSet::new(),
+        // };
+        //
+        // agent.register_namespace(&namespace);
+        // return namespace;
 
-        agent.register_namespace(&namespace);
-        return namespace;
+        todo!()
     }
+}
 
-    // TODO: make register and location functions of `Content`?
-
-    /// Registers a `Page` within the context of this namespace.
-    pub fn register_page(&mut self, page: &Page) {
-        self.pages.insert(page.identity.clone());
+impl Contentable for Namespace {
+    fn context(&self)  -> Location {
+        todo!()
     }
-
-    /// Returns the contextual location of the `Agent`.
-    pub fn location(&self) -> Location { self.agent.find(&self.identity) }
+    fn identity(&self) -> Identity {
+        todo!()
+    }
 }
 
 // TODO: implement vec_diff

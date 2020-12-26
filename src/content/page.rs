@@ -5,6 +5,7 @@ use crate::{
     data::{DataDiff, Data},
     handle::{Location, Identity},
 };
+use super::Hierarchy;
 
 // TODO: linking/backlinking, full text search, etc.
 /// Represents a singular `Page` of user-provided `Data`,
@@ -13,13 +14,10 @@ use crate::{
 /// So, for instance, you could copy a video's id, and embed it in a document.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Page {
-    namespace:     Location, // Namespace
-    pub identity:  Identity, // Page
-    // None if page is the root page
-    parent:        Option<Identity>, // Page
-    pub title:     String,
-    data:          Data, // Content
-    children:      Vec<Identity>, // Page
+    hierarchy: Hierarchy<Namespace, ()>,
+    pub identity: Identity,
+    pub title: String,
+    pub data:  Data, // Content
 }
 
 impl Page {
@@ -37,12 +35,13 @@ impl Page {
         };
 
         self.children.push(page.identity.clone());
-        namespace.register_page(&page);
+        // namespace.register_page(&page);
+        panic!();
         return page;
     }
 
     /// Returns the contextual location of the `Page`.
-    pub fn location(&self) -> Location { self.namespace.find(&self.identity) }
+    pub fn location(&self) -> Location { self.namespace.cd(&self.identity) }
 }
 
 // TODO: call out to Diff to calculate the difference between two Data

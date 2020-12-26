@@ -37,10 +37,11 @@ impl Content {
     /// An Identity, same across versions.
     pub fn location(&self) -> Location {
         use Content::*;
-        match self {
-            Agent(a)     => a.location(),
-            Namespace(n) => n.location(),
-            Page(p)      => p.location(),
-        }
+        todo!()
+        // match self {
+        //     Agent(a)     => a.location(),
+        //     Namespace(n) => n.location(),
+        //     Page(p)      => p.location(),
+        // }
     }
 }

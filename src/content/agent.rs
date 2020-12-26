@@ -1,7 +1,11 @@
 use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
-    content::Namespace,
+    content::{
+        Contentable,
+        Hierarchy,
+        Namespace,
+    },
     handle::{Location, Identity},
     diff::{Diffable, SetDiff},
 };
@@ -13,29 +17,33 @@ use crate::{
 /// Either directly, or through other `Agent`s.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Agent {
+    hierarchy: Hierarchy<(), Namespace>,
+    pub identity: Identity,
     pub display:  String,
-    pub identity: Identity, // Agent
-    namespaces:   HashSet<Identity>,
 }
 
 // TODO: add more functionality
 impl Agent {
     /// Creates a new `Agent` with a given display name.
     pub fn new(display: &str) -> Agent {
-        Agent {
-            display: display.to_string(),
-            identity: Identity::new(), // Agent
-            namespaces: HashSet::new(),
-        }
+        todo!()
+        // Agent {
+        //     display: display.to_string(),
+        //     identity: Identity::new(), // Agent
+        //     namespaces: HashSet::new(),
+        // }
+    }
+}
+
+impl Contentable for Agent {
+    fn context(&self)  -> Location {
+        Location::root()
     }
 
-    /// Adds a `Namespace` to an Agent's namespaces.
-    pub fn register_namespace(&mut self, namespace: &Namespace) {
-        self.namespaces.insert(namespace.identity.clone());
+    fn identity(&self) -> Identity {
+        todo!()
     }
 
-    /// Returns the contextual location of the `Agent`.
-    pub fn location(&self) -> Location { Location::root().find(&self.identity) }
 }
 
 /// An `AgentDiff` represents the difference between two agents.

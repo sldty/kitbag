@@ -8,7 +8,7 @@ pub struct Location(Vec<Identity>);
 impl Location {
     pub fn root() -> Location { Location(vec![]) }
 
-    pub fn find(&self, identity: &Identity) -> Location {
+    pub fn cd(&self, identity: &Identity) -> Location {
         let mut chain = self.0.clone();
         chain.push(identity.clone());
         return Location(chain);
