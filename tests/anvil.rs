@@ -6,8 +6,8 @@ use kitbag::content::*;
 #[test]
 fn messing_around() {
     let mut datastore = Datastore::new(
-        Path::new("/Users/slightknack/Desktop/datastore.kit")
-    );
+        Path::new("/Users/slightknack/Desktop/kitbag_datastore")
+    ).unwrap();
     println!("{:#?}", datastore);
 
     let mut agent = Agent::new("Isaac Clayton");

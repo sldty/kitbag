@@ -40,11 +40,11 @@ pub struct Datastore {
 }
 
 impl Datastore {
-    pub fn new(path: &Path) -> Datastore {
-        Datastore {
+    pub fn new(path: &Path) -> Option<Datastore> {
+        Some(Datastore {
             local: Branch::new(),
-            kv: KV::new(path),
-        }
+            kv:    KV::new(&path.join("kv"))?,
+        })
     }
 
     fn load(&self, address: &Address) -> Option<Content> {

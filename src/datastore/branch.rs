@@ -19,8 +19,8 @@ use crate::{
 /// Once they've been resolved, changes should automatically propogate across branches.
 #[derive(Debug)]
 pub struct Branch {
-    /// The Identity of this branch
-    // identity: Identity,
+    // the location of the branch on-disk:
+    path: PathBuf,
     // TODO: identity should take context into account...
     /// All identities and their associated version history.
     histories: HashMap<Location, History>,
