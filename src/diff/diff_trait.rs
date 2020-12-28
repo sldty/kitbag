@@ -17,8 +17,8 @@ pub struct Atom<T>(T) where T: std::fmt::Debug + Clone + PartialEq;
 impl<T> Atom<T> where
     T: std::fmt::Debug + Clone + PartialEq
 {
-    pub fn new(item: T)     -> Atom<T> { Atom(item)        }
-    pub fn into_inner(&self) -> T      { self.0.to_owned() }
+    pub fn new(item: &T)     -> Atom<T> { Atom(item.clone()) }
+    pub fn into_inner(&self) -> T       { self.0.to_owned()  }
 }
 
 impl<T> Diffable for Atom<T> where
@@ -31,6 +31,6 @@ impl<T> Diffable for Atom<T> where
     }
 
     fn apply(prev: &Atom<T>, diff: &Option<T>) -> Atom<T> {
-        if let Some(next) = diff { Atom::new(next.to_owned()) } else { prev.to_owned() }
+        if let Some(next) = diff { Atom::new(&next) } else { prev.to_owned() }
     }
 }

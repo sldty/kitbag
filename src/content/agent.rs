@@ -63,8 +63,8 @@ impl Diffable for Agent {
     fn make(prev: &Agent, next: &Agent) -> AgentDiff {
         AgentDiff {
             hierarchy: Diffable::make(&prev.hierarchy, &next.hierarchy),
-            identity:  Diffable::make(&Atom::new(prev.identity), &Atom::new(next.identity)),
-            display:   Diffable::make(&Atom::new(prev.display),  &Atom::new(next.display)),
+            identity:  Diffable::make(&Atom::new(&prev.identity), &Atom::new(&next.identity)),
+            display:   Diffable::make(&Atom::new(&prev.display),  &Atom::new(&next.display)),
         }
     }
 
@@ -72,8 +72,8 @@ impl Diffable for Agent {
     fn apply(prev: &Agent, diff: &AgentDiff) -> Agent {
         Agent {
             hierarchy: Diffable::apply(&prev.hierarchy, &diff.hierarchy),
-            identity:  Diffable::apply(&Atom::new(prev.identity), &diff.identity).into_inner(),
-            display:   Diffable::apply(&Atom::new(prev.display),  &diff.display).into_inner(),
+            identity:  Diffable::apply(&Atom::new(&prev.identity), &diff.identity).into_inner(),
+            display:   Diffable::apply(&Atom::new(&prev.display),  &diff.display).into_inner(),
         }
     }
 }

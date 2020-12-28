@@ -41,8 +41,8 @@ impl Page {
 }
 
 impl Contentable for Page {
-    fn context(&self)  -> Location { self.hierarchy.parent   }
-    fn identity(&self) -> Identity { self.hierarchy.identity }
+    fn context(&self)  -> Location { self.hierarchy.parent.clone()   }
+    fn identity(&self) -> Identity { self.hierarchy.identity.clone() }
 }
 
 // TODO: call out to Diff to calculate the difference between two Data

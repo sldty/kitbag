@@ -75,7 +75,10 @@ impl<A, B> Diffable for Hierarchy<A, B> where
 
     fn make(prev: &Hierarchy<A, B>, next: &Hierarchy<A, B>) -> HierarchyDiff<A, B> {
         HierarchyDiff {
-            parent:         Diffable::make(&Atom::new(prev.parent), &Atom::new(next.parent)),
+            parent: Diffable::make(
+                &Atom::new(&prev.parent),
+                &Atom::new(&next.parent),
+            ),
             children:       Diffable::make(&prev.children, &next.children),
             phantom_parent: PhantomData,
             phantom_child:  PhantomData,
@@ -84,8 +87,11 @@ impl<A, B> Diffable for Hierarchy<A, B> where
 
     fn apply(prev: &Hierarchy<A, B>, diff: &HierarchyDiff<A, B>) -> Hierarchy<A, B> {
         Hierarchy {
-            parent:         Diffable::apply(&Atom::new(prev.parent), &diff.parent).into_inner(),
-            identity:       prev.identity,
+            parent: Diffable::apply(
+                &Atom::new(&prev.parent),
+                &diff.parent,
+            ).into_inner(),
+            identity:       prev.identity.clone(),
             children:       Diffable::apply(&prev.children, &diff.children),
             phantom_parent: PhantomData,
             phantom_child:  PhantomData,
