@@ -68,7 +68,7 @@ impl<T> DiskKV<T> where T: Storable + Clone {
 
                 let mut bytes = vec![];
                 let mut file = fs::File::open(path).ok()?;
-                file.read_to_end(&mut bytes);
+                file.read_to_end(&mut bytes).ok()?;
 
                 let unserde: Box<T> = Storable::try_from_bytes(&bytes)?;
                 Some(*unserde)

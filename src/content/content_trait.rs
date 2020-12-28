@@ -19,12 +19,11 @@ pub trait Contentable {
 }
 
 impl Contentable for () {
-    fn context(&self) -> Location {
-        Location::root()
-    }
+    fn context(&self) -> Location { unreachable!() }
+    fn identity(&self) -> Identity { unreachable!() }
 
-    fn identity(&self) -> Identity {
-        unreachable!()
+    fn location(&self) -> Location {
+        Location::root()
     }
 }
 

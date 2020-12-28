@@ -18,11 +18,10 @@ pub enum Diff {
 impl Diff {
     pub fn make(prev: &Content, next: &Content) -> Option<Diff> {
         use Content::*;
-        if prev.location() != next.location() { return None; }
         let diff: Diff = match (prev, next) {
-            ( Agent(p),     Agent(n)     ) => Diff::Agent(Diffable::make(p, n)),
-            ( Namespace(p), Namespace(n) ) => Diff::Namespace(Diffable::make(p, n)),
-            ( Page(p),      Page(n)      ) => Diff::Page(Diffable::make(p, n)),
+            (Agent(p),     Agent(n)    ) => Diff::Agent(Diffable::make(p, n)),
+            (Namespace(p), Namespace(n)) => Diff::Namespace(Diffable::make(p, n)),
+            (Page(p),      Page(n)     ) => Diff::Page(Diffable::make(p, n)),
             _ => return None,
         };
         return Some(diff);
@@ -31,9 +30,9 @@ impl Diff {
     pub fn apply(tip: &Content, diff: &Diff) -> Option<Content> {
         use Content::*;
         let applied: Content = match (tip, diff) {
-            ( Agent(s),     Diff::Agent(d)     ) => Agent(Diffable::apply(s, d)),
-            ( Namespace(s), Diff::Namespace(d) ) => Namespace(Diffable::apply(s, d)),
-            ( Page(s),      Diff::Page(d)      ) => Page(Diffable::apply(s, d)),
+            (Agent(s),     Diff::Agent(d)    ) => Agent(Diffable::apply(s, d)),
+            (Namespace(s), Diff::Namespace(d)) => Namespace(Diffable::apply(s, d)),
+            (Page(s),      Diff::Page(d)     ) => Page(Diffable::apply(s, d)),
             _ => return None,
         };
         return Some(applied);

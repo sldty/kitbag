@@ -23,28 +23,20 @@ pub struct Namespace {
 impl Namespace {
     /// Given an `Agent`, creates a new namespace, and updates the `Agent`.
     pub fn new(agent: &mut Agent, title: &str) -> Namespace {
-        // let namespace = Namespace {
-        //     agent:    agent.location(),
-        //     identity: Identity::new(),
-        //     title:    title.to_string(),
-        //     roots:    vec![],
-        //     pages:    HashSet::new(),
-        // };
-        //
-        // agent.register_namespace(&namespace);
-        // return namespace;
+        let namespace = Namespace {
+            hierarchy: Hierarchy::new(agent),
+            identity:  Identity::new(),
+            title:     title.to_string(),
+        };
 
-        todo!()
+        agent.hierarchy.register(&namespace);
+        return namespace;
     }
 }
 
 impl Contentable for Namespace {
-    fn context(&self)  -> Location {
-        todo!()
-    }
-    fn identity(&self) -> Identity {
-        todo!()
-    }
+    fn context(&self)  -> Location { self.hierarchy.parent.clone()   }
+    fn identity(&self) -> Identity { self.hierarchy.identity.clone() }
 }
 
 // TODO: implement vec_diff

@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 use crate::handle::Location;
 
 use crate::content::{
+    Contentable,
     Agent,
     Namespace,
     Page,
@@ -32,16 +33,20 @@ pub enum Content {
 /// A content entity:
 /// - Has a permanent identity
 /// - Is defined within the context of another identity
-impl Content {
-    // TODO: remove?
-    /// An Identity, same across versions.
-    pub fn location(&self) -> Location {
-        use Content::*;
-        todo!()
-        // match self {
-        //     Agent(a)     => a.location(),
-        //     Namespace(n) => n.location(),
-        //     Page(p)      => p.location(),
-        // }
+impl Contentable for Content {
+    fn context(&self)  -> Location {
+        match self {
+            Content::Agent(a)     => Contentable::context(a),
+            Content::Namespace(n) => Contentable::context(n),
+            Content::Page(p)      => Contentable::context(p),
+        }
+    }
+
+    fn identity(&self) -> crate::Identity {
+        match self {
+            Content::Agent(a)     => Contentable::identity(a),
+            Content::Namespace(n) => Contentable::identity(n),
+            Content::Page(p)      => Contentable::identity(p),
+        }
     }
 }

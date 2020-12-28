@@ -18,7 +18,7 @@ use crate::{
 /// Either directly, or through other `Agent`s.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Agent {
-    hierarchy: Hierarchy<(), Namespace>,
+    pub hierarchy: Hierarchy<(), Namespace>,
     pub identity: Identity,
     pub display:  String,
 }
@@ -27,24 +27,17 @@ pub struct Agent {
 impl Agent {
     /// Creates a new `Agent` with a given display name.
     pub fn new(display: &str) -> Agent {
-        todo!()
-        // Agent {
-        //     display: display.to_string(),
-        //     identity: Identity::new(), // Agent
-        //     namespaces: HashSet::new(),
-        // }
+        Agent {
+            hierarchy: Hierarchy::new(&()),
+            identity:  Identity::new(),
+            display:   display.to_string(),
+        }
     }
 }
 
 impl Contentable for Agent {
-    fn context(&self)  -> Location {
-        Location::root()
-    }
-
-    fn identity(&self) -> Identity {
-        todo!()
-    }
-
+    fn context(&self)  -> Location { self.hierarchy.parent.clone()   }
+    fn identity(&self) -> Identity { self.hierarchy.identity.clone() }
 }
 
 /// An `AgentDiff` represents the difference between two agents.

@@ -6,7 +6,7 @@ use std::{
 use crate::{
     handle::Address,
     diff::Diff,
-    content::Content,
+    content::{Contentable, Content},
     datastore::{Storable, Cache, Delta, Branch},
 };
 
@@ -76,7 +76,7 @@ impl Datastore {
     // NOTE: just local for now!
     pub fn update(&mut self, content: &Content) -> Option<()> {
         self.store(content)?;
-        let history  = self.local.history(&content.location())?;
+        let history  = self.local.history(&Contentable::location(content))?;
         let previous = self.load(&history.head)?;
         self.local.update(&previous, content)?;
         return Some(())

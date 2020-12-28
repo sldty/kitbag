@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     handle::Location,
-    content::Content,
+    content::{Contentable, Content},
     datastore::{DiskKV, History},
 };
 
@@ -40,7 +40,7 @@ impl Branch {
     }
 
     pub fn update(&mut self, previous: &Content, content: &Content) -> Option<()> {
-        let mut history = self.histories.load(&content.location().to_string())?;
+        let mut history = self.histories.load(&Contentable::location(content).to_string())?;
         history.commit(previous, content);
         // Need to store updated history
         todo!();
@@ -48,7 +48,7 @@ impl Branch {
     }
 
     pub fn register(&mut self, content: Content) -> Option<()> {
-        let location = content.location();
+        let location = Contentable::location(&content);
         let history = History::new(content)?;
 
         if self.histories.has(&location.to_string()) { return None; }
