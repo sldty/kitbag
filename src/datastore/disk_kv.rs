@@ -29,15 +29,31 @@ pub struct DiskKV<T> where T: Storable + Clone {
 }
 
 impl<T> DiskKV<T> where T: Storable + Clone {
-    fn scan(path: &Path) -> Option<HashMap<String, Option<T>>> {
+    fn scan(path: &Path) -> Result<HashMap<String, Option<T>>, String> {
         let mut cache = HashMap::new();
 
-        for sub_folder in fs::read_dir(&path).ok()? {
-            let path = &sub_folder.ok()?.path();
-            let name_start = path.file_name()?.to_str()?.to_string();
+        for sub_folder in fs::read_dir(&path)
+            .or(Err(format!("Could not read the folders in the directory {:?}", path.to_str())))?
+        {
+            let path = &sub_folder
+                .or(Err("Item in directory can't be used"))?
+                .path();
+            let name_start = path.file_name()
+                .ok_or("Could not determine folder name")?
+                .to_str()
+                .ok_or("Could not convert file name to string")?
+                .to_string();
 
-            for key_file in fs::read_dir(&path).ok()? {
-                let name_end = &key_file.ok()?.path().file_name()?.to_str()?.to_string();
+            for key_file in fs::read_dir(&path)
+                .or(Err(format!("Could not read the files in the directory {:?}", path.to_str())))?
+            {
+                let name_end = &key_file
+                    .or(Err("Item in directory can't be used"))?
+                    .path().file_name()
+                    .ok_or("Could not determine the file name")?
+                    .to_str()?
+                    .ok_or("Could not convert file name to string")?
+                    .to_string();
                 cache.insert(name_start.clone() + &name_end, None);
             }
         }
@@ -45,10 +61,11 @@ impl<T> DiskKV<T> where T: Storable + Clone {
         return Some(cache);
     }
 
-    pub fn new(path: &Path) -> Option<DiskKV<T>> {
-        fs::create_dir_all(path).ok()?;
+    pub fn new(path: &Path) -> Result<DiskKV<T>, String> {
+        fs::create_dir_all(path)
+            .or(Err(format!("Could not create the path: {:?}", path.to_str())))?;
 
-        Some(DiskKV {
+        Ok(DiskKV {
             path:  path.to_path_buf(),
             cache: DiskKV::<T>::scan(path)?,
         })

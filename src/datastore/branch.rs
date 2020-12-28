@@ -29,8 +29,8 @@ pub struct Branch {
 
 impl Branch {
     // TODO: initialize?
-    pub fn new(path: &Path) -> Option<Branch> {
-        Some(Branch {
+    pub fn new(path: &Path) -> Result<Branch, String> {
+        Ok(Branch {
             histories: DiskKV::new(path)?,
         })
     }
