@@ -13,4 +13,11 @@ impl Location {
         chain.push(identity.clone());
         return Location(chain);
     }
+
+    pub fn to_string(&self) -> String {
+        self.0.iter()
+            .map(|i| i.tag().hex())
+            .collect::<Vec<String>>()
+            .join("/")
+    }
 }

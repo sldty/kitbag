@@ -1,13 +1,15 @@
+use serde::{Serialize, Deserialize};
+
 use std::collections::HashMap;
 
 use crate::{
     handle::Address,
     content::Content,
-    datastore::Delta,
+    datastore::{Storable, Delta},
 };
 
 /// Represents a single chain of versions.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct History {
     /// The Address of the latest Delta.
     pub head: Address,
@@ -15,10 +17,18 @@ pub struct History {
     deltas: HashMap<Address, Delta>,
 }
 
+impl Clone for History {
+    fn clone(&self) -> History {
+        // please don't kill me
+        // TODO: actually clone it better
+        *Storable::try_from_bytes(&Storable::try_to_bytes(self).unwrap()).unwrap()
+    }
+}
+
 impl History {
     /// Create a new history.
     pub fn new(initial: Content) -> Option<History> {
-        let address = Address::stamp(&initial)?.0;
+        let address = Address::new(&Storable::try_to_bytes(&initial)?);
         let delta = Delta::base(initial)?;
 
         let mut deltas = HashMap::new();

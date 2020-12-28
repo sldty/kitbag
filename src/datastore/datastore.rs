@@ -7,7 +7,7 @@ use crate::{
     handle::Address,
     diff::Diff,
     content::Content,
-    datastore::{KV, Delta, Branch},
+    datastore::{Storable, Cache, Delta, Branch},
 };
 
 // TODO: how to make it so the user does not have to have the whole history on-hahd
@@ -36,32 +36,25 @@ pub struct Datastore {
     // branches: HashMap<Identity, Branch>,
     // TODO: build directory hiererchy to aviod rewriting whole datastore.
     /// The write-path of this database.
-    kv: KV,
+    cache: Cache,
 }
 
 impl Datastore {
     pub fn new(path: &Path) -> Option<Datastore> {
         Some(Datastore {
-            local: Branch::new(),
-            kv:    KV::new(&path.join("kv"))?,
+            local: Branch::new(&path.join("branches/local"))?,
+            cache: Cache::new(&path.join("kv"))?,
         })
     }
 
     fn load(&self, address: &Address) -> Option<Content> {
         // TODO: schedule on network if not in cache?
-        let serialized = self.kv.load(address)?;
-        let object = rmp_serde::from_slice(&serialized).ok()?;
-        return Some(object);
+        return self.cache.load(address);
     }
 
     fn store(&mut self, content: &Content) -> Option<Address> {
-        // TODO: store on disk
-        let (address, serialized) = Address::stamp(content)?;
-        if !self.kv.has(&address) {
-            todo!()
-            // self.kv.store(address.clone(), serialized);
-        }
-        return Some(address);
+        // TODO: notify network after written locally?
+        return self.cache.store(content);
     }
 
     // TODO: make more general than deltas
@@ -73,7 +66,7 @@ impl Datastore {
                 let prev_content = self.load(&previous)?;
                 let next_content = Diff::apply(&prev_content, &difference)?;
                 // check the checksum
-                if &Address::stamp(&next_content)?.0 != checksum { return None; }
+                if &Address::new(&Storable::try_to_bytes(&next_content)?) != checksum { return None; }
                 return Some(next_content)
             }
         }

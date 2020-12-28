@@ -1,9 +1,12 @@
-use std::collections::HashMap;
+use std::{
+    path::Path,
+    collections::HashMap,
+};
 
 use crate::{
     handle::Location,
     content::Content,
-    datastore::History,
+    datastore::{DiskKV, History},
 };
 
 // TODO: should branch be content?
@@ -19,29 +22,28 @@ use crate::{
 /// Once they've been resolved, changes should automatically propogate across branches.
 #[derive(Debug)]
 pub struct Branch {
-    // the location of the branch on-disk:
-    path: PathBuf,
     // TODO: identity should take context into account...
     /// All identities and their associated version history.
-    histories: HashMap<Location, History>,
+    histories: DiskKV<History>,
 }
 
 impl Branch {
     // TODO: initialize?
-    pub fn new(/* owner: Agent */) -> Branch {
-        Branch {
-            // identity: Identity::new(),
-            histories: HashMap::new(),
-        }
+    pub fn new(path: &Path) -> Option<Branch> {
+        Some(Branch {
+            histories: DiskKV::new(path)?,
+        })
     }
 
-    pub fn history(&self, location: &Location) -> Option<&History> {
-        self.histories.get(location)
+    pub fn history(&self, location: &Location) -> Option<History> {
+        self.histories.load(&location.to_string())
     }
 
     pub fn update(&mut self, previous: &Content, content: &Content) -> Option<()> {
-        let history = self.histories.get_mut(&content.location())?;
+        let mut history = self.histories.load(&content.location().to_string())?;
         history.commit(previous, content);
+        // Need to store updated history
+        todo!();
         Some(())
     }
 
@@ -49,8 +51,8 @@ impl Branch {
         let location = content.location();
         let history = History::new(content)?;
 
-        if self.histories.contains_key(&location) { return None; }
-        else { self.histories.insert(location, history)?; }
+        if self.histories.has(&location.to_string()) { return None; }
+        else { self.histories.store(&location.to_string(), &history)?; }
         Some(())
     }
 }
