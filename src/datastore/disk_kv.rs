@@ -80,10 +80,13 @@ impl<T> DiskKV<T> where T: Storable + Clone {
     pub fn store(&mut self, key: &str, value: &T) -> Option<()> {
         let folder = &key[..2];
         let name   = &key[2..];
-        let path   = self.path.join(folder).join(name);
+        let dir    = self.path.join(folder);
+        let file   = dir.join(name);
+
+        fs::create_dir(folder).ok()?;
+        let mut file = fs::File::create(file).ok()?;
 
         let bytes = Storable::try_to_bytes(value)?;
-        let mut file = fs::File::open(path).ok()?;
         file.write_all(&bytes).ok()?;
         Some(())
     }
