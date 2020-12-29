@@ -1,7 +1,6 @@
-pub mod content;
 pub mod data;
-
 pub mod datastore;
+
 pub mod diff;
 pub mod handle;
 pub mod network;
