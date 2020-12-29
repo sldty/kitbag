@@ -30,6 +30,7 @@ Many issues seem daunting today because we do not yet have the tools to solve th
 
 ## How does kitbag work?
 > Section not done.
+> NOTE: some of this stuff is specific to Solidarity, specifically the hierarchy encoded in agents, namespaces, pages, etc. For this reason, the documentation here may not actually reflect the current state of kitbag, though it did at some point in the past.
 
 Kitbag is the backend storage layer of Solidarity. Solidarity, as mentioned, is a distributed platform built for communication and collaboration.
 
