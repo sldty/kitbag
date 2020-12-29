@@ -18,6 +18,6 @@ impl Location {
         self.0.iter()
             .map(|i| i.tag().hex())
             .collect::<Vec<String>>()
-            .join("/")
+            .join("-")
     }
 }
