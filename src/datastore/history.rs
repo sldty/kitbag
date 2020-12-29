@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 use crate::{
     handle::Address,
-    content::Content,
     datastore::{Cache, Storable, Delta},
 };
 
