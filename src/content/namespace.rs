@@ -2,7 +2,8 @@ use std::collections::HashSet;
 use serde::{Serialize, Deserialize};
 use crate::{
     handle::{Location, Identity},
-    content::{VecDiff, SetDiff, Agent, Page},
+    diff::{VecDiff, SetDiff, Diffable},
+    content::{Contentable, Hierarchy, HierarchyDiff, Agent, Page},
 };
 
 // TODO: permissions.
@@ -14,58 +15,52 @@ use crate::{
 pub struct Namespace {
     // TODO: remove once permissions are implemented?
     /// The owner of the namespace
-    agent:        Location,
-    pub identity: Identity, // Namespace
-    pub title:    String,
-    roots:        Vec<Identity>, // Page
-    pages:        HashSet<Identity>, // Page
+    pub hierarchy: Hierarchy<Agent, Page>,
+    pub identity: Identity,
+    pub title: String,
+    pub roots: Vec<Identity>,
 }
 
 impl Namespace {
     /// Given an `Agent`, creates a new namespace, and updates the `Agent`.
     pub fn new(agent: &mut Agent, title: &str) -> Namespace {
         let namespace = Namespace {
-            agent:    agent.location(),
-            identity: Identity::new(),
-            title:    title.to_string(),
-            roots:    vec![],
-            pages:    HashSet::new(),
+            hierarchy: Hierarchy::new(agent),
+            identity:  Identity::new(),
+            title:     title.to_string(),
+            roots:     vec![],
         };
 
-        agent.register_namespace(&namespace);
+        agent.hierarchy.register(&namespace);
         return namespace;
     }
+}
 
-    // TODO: make register and location functions of `Content`?
-
-    /// Registers a `Page` within the context of this namespace.
-    pub fn register_page(&mut self, page: &Page) {
-        self.pages.insert(page.identity.clone());
-    }
-
-    /// Returns the contextual location of the `Agent`.
-    pub fn location(&self) -> Location { self.agent.find(&self.identity) }
+impl Contentable for Namespace {
+    fn context(&self)  -> Location { self.hierarchy.parent.clone()   }
+    fn identity(&self) -> Identity { self.hierarchy.identity.clone() }
 }
 
 // TODO: implement vec_diff
 /// Represents a difference between two `Namespaces`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NamespaceDiff {
-    // TODO: change of ownership?
-    // agent: Option<Location>,
-    title: Option<String>,
-    roots: VecDiff<Identity>,
-    pages: SetDiff<Identity>,
+    pub hierarchy: HierarchyDiff<Agent, Page>,
+    pub identity:  Option<Identity>,
+    pub title:     Option<String>,
+    pub roots:     VecDiff<Identity>,
 }
 
-impl NamespaceDiff {
-    /// Finds the difference between two `Namespace`s, and creates an `NamespaceDiff`.
-    pub fn make(prev: &Namespace, next: &Namespace) -> NamespaceDiff {
+impl Diffable for Namespace {
+    type Diff = NamespaceDiff;
+
+    /// Finds the difference between two `Namespaces`s, and creates an `Namespaces`.
+    fn make(prev: &Namespace, next: &Namespace) -> NamespaceDiff {
         todo!()
     }
 
-    /// Applies this diff to another `Namespace` to create a new `Namespace`.
-    pub fn apply(&self, prev: &Namespace) -> Namespace {
+    /// Applies this diff to another `Agent` to create a new `Agent`.
+    fn apply(prev: &Namespace, diff: &NamespaceDiff) -> Namespace {
         todo!()
     }
 }

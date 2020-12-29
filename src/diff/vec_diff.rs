@@ -1,6 +1,9 @@
 use serde::{Serialize, Deserialize};
+use crate::diff::Diffable;
 
 // TODO: look into copy-and-insert based diff systems?
+// TODO: bounds check, do not panic of botched application
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum Op<T> where T: PartialEq + Clone {
     Insert(Vec<T>), // insert Vec<T> at index
@@ -224,7 +227,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
             // TODO: verify modulo behaviour is the same as python's
             let (a_pos, a_neg) = (c[VecDiff::<T>::modulo(k + 1, space)], c[VecDiff::<T>::modulo(k - 1, space)]);
             let mut a = if k == -(trial as isize)
-                        || k != (trial as _) && a_neg < a_pos
+                        || k != (trial as isize) && a_neg < a_pos
                         { a_pos } else { a_neg + 1 };
 
             let mut b = ((a as isize) - k) as usize;
@@ -346,7 +349,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
     // TODO: move pre-processing to different function?
     // TODO: if diff will take a long time to calculate, delete all then insert all.
 
-    pub fn make(prev: &[T], next: &[T]) -> VecDiff<T> {
+    fn make(prev: &[T], next: &[T]) -> VecDiff<T> {
         // if they're equal, there's no change...
         if prev == next { return VecDiff(vec![]) }
 
@@ -391,7 +394,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
         return VecDiff::new(prefix, postfix, middle);
     }
 
-    pub fn apply(&self, prev: &[T]) -> Vec<T> {
+    fn apply(&self, prev: &[T]) -> Vec<T> {
         let mut head = 0;
         let mut next = vec![];
 
@@ -410,20 +413,16 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl<T> Diffable for Vec<T> where
+    T: Clone + PartialEq + std::fmt::Debug
+{
+    type Diff = VecDiff<T>;
 
-    #[test]
-    fn trial() {
-        let a = [1, 3, 2, 5, 4];
-        let b = [1, 2, 3, 4, 5];
+    fn make(prev: &Vec<T>, next: &Vec<T>) -> VecDiff<T> {
+        VecDiff::make(&prev, &next)
+    }
 
-        let diff = VecDiff::make(&a, &b);
-        println!("{:?}", diff);
-        let b_recon = diff.apply(&a);
-        println!("init: {:?}\norig: {:?}\nnew:  {:?}", a, b, b_recon);
-
-        panic!()
+    fn apply(prev: &Vec<T>, diff: &VecDiff<T>) -> Vec<T> {
+        VecDiff::apply(diff, prev)
     }
 }
