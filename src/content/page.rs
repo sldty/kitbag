@@ -22,6 +22,22 @@ pub struct Page {
 }
 
 impl Page {
+    /// Creates a root `Page` within the context of a `Namespace`.
+    pub fn root(namespace: &mut Namespace, title: &str, data: Data) -> Page {
+        let page = Page {
+            hierarchy:     Hierarchy::new(namespace),
+            page_parent:   None,
+            page_children: vec![],
+            title:         title.to_string(),
+            data:          data,
+        };
+
+        namespace.hierarchy.register(&page);
+        namespace.roots.push(Contentable::identity(&page));
+
+        return page;
+    }
+
     /// Creates a child `Page` within the context of a `Namespace`.
     pub fn child(&mut self, namespace: &mut Namespace, title: &str, data: Data) -> Page {
         let page = Page {

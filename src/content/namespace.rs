@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use crate::{
     handle::{Location, Identity},
     diff::{VecDiff, SetDiff, Diffable},
-    content::{Contentable, Hierarchy, Agent, Page},
+    content::{Contentable, Hierarchy, HierarchyDiff, Agent, Page},
 };
 
 // TODO: permissions.
@@ -18,6 +18,7 @@ pub struct Namespace {
     pub hierarchy: Hierarchy<Agent, Page>,
     pub identity: Identity,
     pub title: String,
+    pub roots: Vec<Identity>,
 }
 
 impl Namespace {
@@ -27,6 +28,7 @@ impl Namespace {
             hierarchy: Hierarchy::new(agent),
             identity:  Identity::new(),
             title:     title.to_string(),
+            roots:     vec![],
         };
 
         agent.hierarchy.register(&namespace);
@@ -43,11 +45,10 @@ impl Contentable for Namespace {
 /// Represents a difference between two `Namespaces`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NamespaceDiff {
-    // TODO: change of ownership?
-    // agent: Option<Location>,
-    title: Option<String>,
-    roots: VecDiff<Identity>,
-    pages: SetDiff<Identity>,
+    pub hierarchy: HierarchyDiff<Agent, Page>,
+    pub identity:  Option<Identity>,
+    pub title:     Option<String>,
+    pub roots:     VecDiff<Identity>,
 }
 
 impl Diffable for Namespace {

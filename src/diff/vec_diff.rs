@@ -227,7 +227,7 @@ impl<T> VecDiff<T> where T: PartialEq + Clone + std::fmt::Debug {
             // TODO: verify modulo behaviour is the same as python's
             let (a_pos, a_neg) = (c[VecDiff::<T>::modulo(k + 1, space)], c[VecDiff::<T>::modulo(k - 1, space)]);
             let mut a = if k == -(trial as isize)
-                        || k != (trial as _) && a_neg < a_pos
+                        || k != (trial as isize) && a_neg < a_pos
                         { a_pos } else { a_neg + 1 };
 
             let mut b = ((a as isize) - k) as usize;

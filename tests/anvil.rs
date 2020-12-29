@@ -12,16 +12,20 @@ fn messing_around() {
     println!("{:#?}", datastore);
 
     let mut agent = Agent::new("Isaac Clayton");
-    datastore.register(&Content::Agent(agent.clone()));
+    datastore.register(&Content::Agent(agent.clone())).unwrap();
 
     let mut party = Namespace::new(&mut agent, "Isaac's Party");
-    datastore.register(&Content::Namespace(party.clone()));
+    datastore.register(&Content::Namespace(party.clone())).unwrap();
 
     agent.display = "Isaac Buddy Clayton".to_string();
-    datastore.update(&Content::Agent(agent.clone()));
-    datastore.update(&Content::Agent(agent.clone()));
+    datastore.update(&Content::Agent(agent.clone())).unwrap();
 
-    // let mut welcome = Page::child(&mut party, "Welcome", data::Data::N)
+    let mut welcome = Page::root(
+        &mut party,
+        "Welcome",
+        data::Data::Text(data::Text::new(String::from("Hello!")),
+    ));
+    datastore.register(&Content::Page(welcome.clone())).unwrap();
 
     println!("{:#?}", datastore);
 

@@ -6,6 +6,10 @@ use crate::diff::{Lines, Diffable};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Text(String);
 
+impl Text {
+    pub fn new(string: String) -> Text { Text(string) }
+}
+
 /// Diff runs on lines.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextDiff(VecDiff<String>);

@@ -29,31 +29,17 @@ pub struct DiskKV<T> where T: Storable + Clone {
 }
 
 impl<T> DiskKV<T> where T: Storable + Clone {
-    fn scan(path: &Path) -> Result<HashMap<String, Option<T>>, String> {
+    fn scan(path: &Path) -> Option<HashMap<String, Option<T>>> {
         let mut cache = HashMap::new();
 
-        for sub_folder in fs::read_dir(&path)
-            .or(Err(format!("Could not read the folders in the directory {:?}", path.to_str())))?
-        {
-            let path = &sub_folder
-                .or(Err("Item in directory can't be used"))?
-                .path();
-            let name_start = path.file_name()
-                .ok_or("Could not determine folder name")?
-                .to_str()
-                .ok_or("Could not convert file name to string")?
-                .to_string();
+        for sub_folder in fs::read_dir(&path).ok()? {
+            let folder_path = &sub_folder.ok()?.path();
+            let name_start = folder_path.file_name()?.to_str()?.to_string();
+            if !folder_path.is_dir() { continue; }
 
-            for key_file in fs::read_dir(&path)
-                .or(Err(format!("Could not read the files in the directory {:?}", path.to_str())))?
-            {
-                let name_end = &key_file
-                    .or(Err("Item in directory can't be used"))?
-                    .path().file_name()
-                    .ok_or("Could not determine the file name")?
-                    .to_str()?
-                    .ok_or("Could not convert file name to string")?
-                    .to_string();
+            for key_file in fs::read_dir(&folder_path).ok()? {
+                let file_path = key_file.ok()?.path();
+                let name_end = &file_path.file_name()?.to_str()?.to_string();
                 cache.insert(name_start.clone() + &name_end, None);
             }
         }
@@ -67,7 +53,8 @@ impl<T> DiskKV<T> where T: Storable + Clone {
 
         Ok(DiskKV {
             path:  path.to_path_buf(),
-            cache: DiskKV::<T>::scan(path)?,
+            cache: DiskKV::<T>::scan(path)
+                .ok_or(format!("Could not scan for existing keys: {:?}", path.to_str()))?,
         })
     }
 
@@ -75,36 +62,38 @@ impl<T> DiskKV<T> where T: Storable + Clone {
         return self.cache.contains_key(key);
     }
 
-    pub fn load(&self, key: &str) -> Option<T> {
+    pub fn load(&self, key: &str) -> Result<T, String> {
         match self.cache.get(key) {
-            Some(Some(value)) => Some(value.to_owned()),
+            Some(Some(value)) => Ok(value.to_owned()),
             Some(None) => {
                 let folder = &key[..2];
                 let name   = &key[2..];
                 let path   = self.path.join(folder).join(name);
 
                 let mut bytes = vec![];
-                let mut file = fs::File::open(path).ok()?;
-                file.read_to_end(&mut bytes).ok()?;
+                let mut file = fs::File::open(path).or(Err("Could not open key file "))?;
+                file.read_to_end(&mut bytes).or(Err("Could not read key file"))?;
 
-                let unserde: Box<T> = Storable::try_from_bytes(&bytes)?;
-                Some(*unserde)
+                let unserde: Box<T> = Storable::try_from_bytes(&bytes)
+                    .ok_or("Could not deserialize value of key file")?;
+                Ok(*unserde)
             },
-            None => None,
+            None => Err(String::from("Key is not on-hand")),
         }
     }
 
-    pub fn store(&mut self, key: &str, value: &T) -> Option<()> {
+    pub fn store(&mut self, key: &str, value: &T) -> Result<(), String> {
         let folder = &key[..2];
         let name   = &key[2..];
         let dir    = self.path.join(folder);
         let file   = dir.join(name);
 
-        fs::create_dir(folder).ok()?;
-        let mut file = fs::File::create(file).ok()?;
+        fs::create_dir_all(dir).or(Err("Could not create key store directory"))?;
+        let mut file = fs::File::create(file).or(Err("Could not create key store file: {:?}"))?;
 
-        let bytes = Storable::try_to_bytes(value)?;
-        file.write_all(&bytes).ok()?;
-        Some(())
+        let bytes = Storable::try_to_bytes(value).ok_or("Could not serialize value of key")?;
+        file.write_all(&bytes).or(Err("Could not write serialized value to key file"))?;
+        self.cache.insert(key.to_string(), Some(value.clone()));
+        Ok(())
     }
 }

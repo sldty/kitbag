@@ -40,51 +40,58 @@ pub struct Datastore {
 }
 
 impl Datastore {
-    pub fn new(path: &Path) -> Option<Datastore> {
-        Some(Datastore {
+    pub fn new(path: &Path) -> Result<Datastore, String> {
+        Ok(Datastore {
             local: Branch::new(&path.join("branches/local"))?,
             cache: Cache::new(&path.join("kv"))?,
         })
     }
 
-    fn load(&self, address: &Address) -> Option<Content> {
+    fn load(&self, address: &Address) -> Result<Content, String> {
         // TODO: schedule on network if not in cache?
         return self.cache.load(address);
     }
 
-    fn store(&mut self, content: &Content) -> Option<Address> {
+    fn store(&mut self, content: &Content) -> Result<Address, String> {
         // TODO: notify network after written locally?
         return self.cache.store(content);
     }
 
     // TODO: make more general than deltas
-    fn resolve(&mut self, delta: &Delta) -> Option<Content> {
+    fn resolve(&mut self, delta: &Delta) -> Result<Content, String> {
         match delta {
-            Delta::Base { base, .. } => Some(base.clone()),
+            Delta::Base { base, .. } => Ok(base.clone()),
             Delta::Tip  { previous, difference, checksum } => {
                 // TODO: check datastore cache, then history.
                 let prev_content = self.load(&previous)?;
-                let next_content = Diff::apply(&prev_content, &difference)?;
+                let next_content = Diff::apply(&prev_content, &difference)
+                    .ok_or("Could not apply diff")?;
                 // check the checksum
-                if &Address::new(&Storable::try_to_bytes(&next_content)?) != checksum { return None; }
-                return Some(next_content)
+                if &Address::new(&Storable::try_to_bytes(&next_content)
+                        .ok_or("Could not serialize content")?
+                ) != checksum {
+                    return Err("Checksum of delta does not match".to_string());
+                }
+                return Ok(next_content);
             }
         }
     }
 
     // TODO: commit
     // NOTE: just local for now!
-    pub fn update(&mut self, content: &Content) -> Option<()> {
+    pub fn update(&mut self, content: &Content) -> Result<(), String> {
         self.store(content)?;
         let history  = self.local.history(&Contentable::location(content))?;
         let previous = self.load(&history.head)?;
         self.local.update(&previous, content)?;
-        return Some(())
+        Ok(())
     }
 
-    pub fn register(&mut self, content: &Content) -> Option<()> {
+    pub fn register(&mut self, content: &Content) -> Result<(), String> {
         self.store(content)?;
         self.local.register(content.clone())?;
-        todo!()
+        // todo!()
+        // TODO: propogate changes up location chain?
+        Ok(())
     }
 }

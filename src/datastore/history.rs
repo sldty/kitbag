@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::{
     handle::Address,
     content::Content,
-    datastore::{Storable, Delta},
+    datastore::{Cache, Storable, Delta},
 };
 
 /// Represents a single chain of versions.

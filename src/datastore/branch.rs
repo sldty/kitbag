@@ -35,24 +35,27 @@ impl Branch {
         })
     }
 
-    pub fn history(&self, location: &Location) -> Option<History> {
+    pub fn history(&self, location: &Location) -> Result<History, String> {
         self.histories.load(&location.to_string())
     }
 
-    pub fn update(&mut self, previous: &Content, content: &Content) -> Option<()> {
-        let mut history = self.histories.load(&Contentable::location(content).to_string())?;
+    pub fn update(&mut self, previous: &Content, content: &Content) -> Result<(), String> {
+        let mut history = self.histories.load(&Contentable::location(previous).to_string())?;
         history.commit(previous, content);
         // Need to store updated history
-        todo!();
-        Some(())
+        self.histories.store(&Contentable::location(content).to_string(), &history)?;
+        Ok(())
     }
 
-    pub fn register(&mut self, content: Content) -> Option<()> {
+    pub fn register(&mut self, content: Content) -> Result<(), String> {
         let location = Contentable::location(&content);
-        let history = History::new(content)?;
+        let history = History::new(content).ok_or("Could not create history")?;
 
-        if self.histories.has(&location.to_string()) { return None; }
-        else { self.histories.store(&location.to_string(), &history)?; }
-        Some(())
+        if self.histories.has(&location.to_string()) {
+            return Err("Content has already been registered".to_string());
+        } else {
+            self.histories.store(&location.to_string(), &history)?;
+        }
+        Ok(())
     }
 }
