@@ -10,13 +10,6 @@ use rand_core::OsRng;
 use hkdf::Hkdf;
 use sha2::Sha256;
 
-// Converts a vector of bytes to a string hex representation.
-pub fn hex(bytes: &[u8]) -> String {
-    bytes.iter()
-        .map(|b| format!("{:02x}", b))
-        .collect()
-}
-
 /// A k256 elliptic curve key pair (assymetric crypto, ephemeral).
 /// Basically just wraps some primitives provided by the crate `k256` of RustCrypto.
 /// We only store the secret key, because the public key can be derived.
