@@ -12,6 +12,6 @@ pub enum Delta {
     Tip  {
         checksum: Address,
         previous: Address,
-        difference: Diff
+        difference: Diff,
     },
 }

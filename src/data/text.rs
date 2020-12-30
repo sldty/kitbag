@@ -18,7 +18,10 @@ impl Diffable for Text {
     type Diff = TextDiff;
 
     fn make(prev: &Text, next: &Text) -> TextDiff {
-        TextDiff(Diffable::make(&Lines::new(prev.0.to_string()), &Lines::new(next.0.to_string())))
+        TextDiff(Diffable::make(
+            &Lines::new(prev.0.to_string()),
+            &Lines::new(next.0.to_string()),
+        ))
     }
 
     fn apply(prev: &Text, diff: &TextDiff) -> Text {
