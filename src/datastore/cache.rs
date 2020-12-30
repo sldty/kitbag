@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use crate::{
-    content::Content,
     datastore::{Storable, DiskKV},
     handle::Address
 };

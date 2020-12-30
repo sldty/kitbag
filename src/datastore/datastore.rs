@@ -5,9 +5,8 @@ use std::{
 
 use crate::{
     handle::Address,
-    diff::Diff,
-    content::{Contentable, Content},
-    datastore::{Storable, Cache, Delta, Branch},
+    datastore::{Storable, Cache, Delta, Branch}, 
+    keys::KeyPublic,
 };
 
 // TODO: how to make it so the user does not have to have the whole history on-hahd
@@ -30,12 +29,7 @@ use crate::{
 /// This is built out in-memory, from the relations contained from the content-addressed code.
 #[derive(Debug)]
 pub struct Datastore {
-    /// The identity of the local branch.
-    local: Branch,
-    // /// Map branch identity to branches.
-    // branches: HashMap<Identity, Branch>,
-    // TODO: build directory hiererchy to aviod rewriting whole datastore.
-    /// The write-path of this database.
+    keys:  HashMap<KeyPublic, Branch>,
     cache: Cache,
 }
 

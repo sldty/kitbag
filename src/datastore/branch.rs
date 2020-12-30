@@ -6,7 +6,7 @@ use std::{
 use crate::{
     handle::Location,
     content::{Contentable, Content},
-    datastore::{DiskKV, History},
+    datastore::{DiskKV, History}, KeyPublic,
 };
 
 // TODO: should branch be content?
@@ -22,6 +22,7 @@ use crate::{
 /// Once they've been resolved, changes should automatically propogate across branches.
 #[derive(Debug)]
 pub struct Branch {
+    key: KeyPublic,
     // TODO: identity should take context into account...
     /// All identities and their associated version history.
     histories: DiskKV<History>,

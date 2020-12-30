@@ -10,10 +10,8 @@ use crate::{
 /// Represents a single chain of versions.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct History {
-    /// The Address of the latest Delta.
-    pub head: Address,
-    /// Maps Content addresses to the Delta that is used to make that address.
-    deltas: HashMap<Address, Delta>,
+    /// Maps deltas to the 
+    deltas: DiskKV<Address, Delta>,
 }
 
 impl Clone for History {
@@ -26,7 +24,7 @@ impl Clone for History {
 
 impl History {
     /// Create a new history.
-    pub fn new(initial: Content) -> Option<History> {
+    pub fn new(initial: impl Storable) -> Option<History> {
         let address = Address::new(&Storable::try_to_bytes(&initial)?);
         let delta = Delta::base(initial)?;
 
