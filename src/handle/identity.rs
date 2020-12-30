@@ -19,4 +19,8 @@ impl Identity {
         timestamp.append(&mut randstamp);
         Identity(timestamp)
     }
+
+    pub fn bytes(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
 }

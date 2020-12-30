@@ -11,7 +11,8 @@ use crate::{
 /// Contextualizes Identities.
 pub struct KeySpace {
     key_public: KeyPublic,
-    delta_maps: DiskMap<Identity, History>,
+    /// Maps `Identity` -> `History`
+    delta_maps: DiskMap<History>,
 }
 
 impl KeySpace {

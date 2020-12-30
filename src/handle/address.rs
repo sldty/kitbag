@@ -13,4 +13,8 @@ impl Address {
         let result = hasher.finalize();
         Address(result.to_vec())
     }
+
+    pub fn bytes(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
 }
