@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use crate::Address;
+
 pub struct History {
     // The address of the latest version
     head: Address,

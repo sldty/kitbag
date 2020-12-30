@@ -1,3 +1,9 @@
+use crate::{
+    handle::Address,
+    data::Data,
+    diff::Diff,
+};
+
 pub enum Delta {
     Base {
         checksum: Address,

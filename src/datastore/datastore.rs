@@ -1,6 +1,10 @@
-use crate::datastore::{
-    KeySpace,
-    AddressMap,
+use std::collections::HashMap;
+use crate::{
+    keys::KeyPublic,
+    datastore::{
+        KeySpace,
+        AddressMap,
+    }
 };
 
 pub struct Datastore {

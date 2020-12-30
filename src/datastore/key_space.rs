@@ -1,3 +1,12 @@
+use crate::{
+    keys::KeyPublic,
+    handle::Identity,
+    datastore::{
+        DiskMap,
+        History
+    }
+};
+
 pub struct KeySpace {
     key_public: KeyPublic,
     delta_maps: DiskMap<Identity, History>,

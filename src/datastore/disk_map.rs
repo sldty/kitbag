@@ -7,7 +7,7 @@ use std::{
 
 use crate::datastore::Storable;
 
-/// TODO append three characters to end of every key before writing?
+// TODO: append three characters to end of every key before writing?
 /// A stupid append-only HashMap that writes to disk.
 /// A key is a (utf-8) String, which maps to a ~~serializable~~ `Storable` value.
 /// When stored on disk, this is files mapped to their serialized value.
@@ -17,7 +17,7 @@ use crate::datastore::Storable;
 /// sha256 of: "git is nice"
 /// ```
 #[derive(Debug)]
-pub struct DiskMap<A, B> where A: Clone, B: Storable + Clone {
+pub struct DiskMap<A, B> where B: Storable + Clone {
     // The location of the datastore on-disk
     path: PathBuf,
     /// Recently accessed addresses for increased efficiency.
@@ -25,8 +25,8 @@ pub struct DiskMap<A, B> where A: Clone, B: Storable + Clone {
     cache: HashMap<A, Option<B>>,
 }
 
-impl<A, B> DiskKV<A, B> where T: Storable + Clone {
-    fn scan(path: &Path) -> Option<HashMap<String, Option<T>>> {
+impl<A, B> DiskMap<A, B> where B: Storable + Clone {
+    fn scan(path: &Path) -> Option<HashMap<String, Option<B>>> {
         let mut cache = HashMap::new();
 
         for key_file in fs::read_dir(&path).ok()? {
@@ -38,13 +38,13 @@ impl<A, B> DiskKV<A, B> where T: Storable + Clone {
         return Some(cache);
     }
 
-    pub fn new(path: &Path) -> Result<DiskKV<T>, String> {
+    pub fn new(path: &Path) -> Result<DiskMap<A, B>, String> {
         fs::create_dir_all(path)
             .or(Err(format!("Could not create the path: {:?}", path.to_str())))?;
 
-        Ok(DiskKV {
+        Ok(DiskMap {
             path:  path.to_path_buf(),
-            cache: DiskKV::<T>::scan(path)
+            cache: DiskMap::<A, B>::scan(path)
                 .ok_or(format!("Could not scan for existing keys: {:?}", path.to_str()))?,
         })
     }
@@ -53,7 +53,7 @@ impl<A, B> DiskKV<A, B> where T: Storable + Clone {
         return self.cache.contains_key(key);
     }
 
-    pub fn get(&self, key: &A) -> Result<T, String> {
+    pub fn get(&self, key: &A) -> Result<B, String> {
         match self.cache.get(key) {
             Some(Some(value)) => Ok(value.to_owned()),
             Some(None) => {
@@ -62,7 +62,7 @@ impl<A, B> DiskKV<A, B> where T: Storable + Clone {
                 let mut file = fs::File::open(path).or(Err("Could not open key file "))?;
                 file.read_to_end(&mut bytes).or(Err("Could not read key file"))?;
 
-                let unserde: Box<T> = Storable::try_from_bytes(&bytes)
+                let unserde: Box<B> = Storable::try_from_bytes(&bytes)
                     .ok_or("Could not deserialize value of key file")?;
                 Ok(*unserde)
             },
