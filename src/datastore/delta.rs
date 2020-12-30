@@ -3,7 +3,6 @@ use serde::{Serialize, Deserialize};
 use crate::{
     handle::Address,
     diff::Diff,
-    content::Content,
     datastore::Storable,
 };
 
