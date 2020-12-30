@@ -7,6 +7,8 @@ use crate::{
     }
 };
 
+/// Represents a space where a public key may write `Content`.
+/// Contextualizes Identities.
 pub struct KeySpace {
     key_public: KeyPublic,
     delta_maps: DiskMap<Identity, History>,

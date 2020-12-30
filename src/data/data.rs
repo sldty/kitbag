@@ -10,14 +10,14 @@ use crate::{
 // - Sandboxed embedded applications through WASM,
 // - Translation layers between different data schema.
 
-/// Represents some user-provided data,
-/// whether this be a document, a chat room, a video, (and so on).
-/// Right now I just have a Number dummy-type.
+/// Represents some user-provided `Data`,
+/// whether this be a document, a chat room, a video, or otherwise.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Data {
     Text(Text),
 }
 
+/// Represents the difference between some `Data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataDiff {
     TextDiff(TextDiff)

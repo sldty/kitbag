@@ -4,8 +4,8 @@ use crate::{
     handle::{Address, Identity}
 };
 
-/// A Location is a specific version of some Content,
-/// within the context of a Key.
+/// A `Location` is a specific version of some `Content`,
+/// within the context of a `Key`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Location {
     key_public: KeyPublic,
@@ -13,8 +13,8 @@ pub struct Location {
     version:    Address,
 }
 
-/// A Fork refers to all versions of some Content,
-/// within the context of a Key.
+/// A `Fork` refers to all versions of some `Content`,
+/// within the context of a `Key`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Fork {
     key_public: KeyPublic,

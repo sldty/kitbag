@@ -1,7 +1,9 @@
-// nodes are responseless, which means after a secure connection has been
+// NOTE: nodes are responseless, which means after a secure connection has been
 // established, messages are sent without expecting a response, necessarily.
 // this makes things easier for now, but a request-response model is
 // definitely something to look into in the future.
+
+/// Represents a `Message`, that should be encrypted, sent between `Node`s.
 pub enum Message {
     // authenticate connection
     // Gday(Vec<>),

@@ -2,7 +2,7 @@ use sha3::{Digest, Sha3_256};
 use serde::{Serialize, Deserialize};
 
 // TODO: fixed size?
-/// An address is the immutable handle of a specific version of an entity.
+/// An `Address` is the immutable hash of some `Data`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Address(Vec<u8>);
 

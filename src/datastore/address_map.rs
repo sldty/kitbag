@@ -4,6 +4,10 @@ use crate::{
     data::Data
 };
 
+/// A content-addressed hash table,
+/// that is replicated on disk.
+/// Maps the hash of some `Data` (its `Address`)
+/// To that data.
 pub struct AddressMap {
     contents: DiskMap<Address, Data>
 }

@@ -1,4 +1,5 @@
-// Represents a peer node
+// A `Peer` represents a non-local `Node`
+// that we have an authenticated connection to.
 pub struct Peer {
     public_key: KeyPublic,
     connection: TcpStream,

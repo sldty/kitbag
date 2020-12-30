@@ -1,5 +1,7 @@
 use crate::keys::KeyPair;
 
+/// A `Node` is a local participant of the network we have control over.
+/// It acts on behalf of a `Datastore`.
 pub struct Node {
     // todo: hashmap of some sort?
     temp_key:   KeyPair,

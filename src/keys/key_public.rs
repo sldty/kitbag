@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 
+/// Represents the public key of a k256 cryptosystem.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct KeyPublic(Vec<u8>);
 

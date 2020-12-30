@@ -5,9 +5,9 @@ use chacha20poly1305::aead::{Aead, NewAead};
 use crate::keys::{KeyPair, KeyPublic};
 
 // NOTE: do no implement serde for this
-// Represents a symmetrical secret key,
-// used by ChaCha20Poly1305 - generate one through
-// the use of the associated method `shared_secret` on `KeyPair`
+/// Represents a symmetrical secret key derived via the k256 cryptosystem.
+/// used by ChaCha20Poly1305 - generate one through
+/// the use of the associated method `shared_secret` on `KeyPair`
 pub struct KeySecret([u8; 32]);
 
 impl KeySecret {

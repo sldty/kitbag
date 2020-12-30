@@ -3,6 +3,9 @@ use crate::diff::{Diffable, VecDiff};
 pub struct Chars(String);
 pub struct Words(String);
 
+/// Represents a `String`, grouped into lines (by `'\n'`).
+/// Useful for when you want to take a courser
+/// difference between two `String`s.
 pub struct Lines(String);
 
 impl Lines {

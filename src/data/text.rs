@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use crate::diff::VecDiff;
 use crate::diff::{Lines, Diffable};
 
-// A plain text file, like some code.
+/// A plain text file, like some code.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Text(String);
 
@@ -10,7 +10,8 @@ impl Text {
     pub fn new(string: String) -> Text { Text(string) }
 }
 
-/// Diff runs on lines.
+/// The difference of a pair of plain text files.
+/// Difference is run on the lines in the file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextDiff(VecDiff<String>);
 

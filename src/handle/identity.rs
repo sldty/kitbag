@@ -3,7 +3,7 @@ use rand::random;
 use serde::{Serialize, Deserialize};
 
 // TODO: fixed size?
-/// An address is the immutable handle of an entity
+/// An `Identity` is a unique identifier assigned to some `Content`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Identity(Vec<u8>);
 
