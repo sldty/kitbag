@@ -29,8 +29,8 @@ impl KeySecret {
         key_public: &KeyPublic,
         message:    Vec<u8>,
     ) -> Option<([u8; 12], Vec<u8>)> {
-        let secret = key_pair.shared_secret(key_public)?;
-        let key = Key::from_slice(&secret.bytes());
+        let secret_bytes = key_pair.shared_secret(key_public)?.bytes();
+        let key = Key::from_slice(&secret_bytes);
 
         let mut proto_nonce = [0u8; 12];
         OsRng.fill_bytes(&mut proto_nonce);
@@ -51,8 +51,8 @@ impl KeySecret {
         proto_nonce: [u8; 12],
         encrypted:   Vec<u8>,
     ) -> Option<Vec<u8>> {
-        let secret = key_pair.shared_secret(key_public)?;
-        let key = Key::from_slice(&secret.bytes());
+        let secret_bytes = key_pair.shared_secret(key_public)?.bytes();
+        let key = Key::from_slice(&secret_bytes);
         let nonce = Nonce::from_slice(&proto_nonce);
 
         let cipher = ChaCha20Poly1305::new(key);

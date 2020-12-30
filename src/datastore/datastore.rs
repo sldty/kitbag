@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    path::Path,
+};
 use crate::{
     keys::KeyPublic,
     datastore::{
@@ -18,11 +21,19 @@ pub struct Datastore {
 }
 
 impl Datastore {
-    // new
+    pub fn new(path: &Path) -> Result<Datastore, String> {
+        Ok(Datastore {
+            keyspaces:   HashMap::new(),
+            address_map: AddressMap::new(&path.join("addresses"))?,
+        })
+    }
+
     // resolve(Location) -> Content {
     // self.address_map(Location.address)
     // self.keyspaces.get(Location.key_public).history(Location.identity).look_up(address)
     // // TODO
     // }
     // commit(KeyPublic, Content) -> Location
+
+    // add_key(KeyPublic)
 }

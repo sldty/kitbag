@@ -1,12 +1,14 @@
+use serde::{Serialize, Deserialize};
 use crate::{
     handle::Address,
     data::Data,
-    diff::Diff,
+    // diff::Diff,
 };
 
 /// Represents the change between two versions.
 /// Note that a checksum is stored, so this `Delta`'s `Diff` can *not* be applied
 /// willy-nilly irrespective to any `Data`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Delta {
     Base {
         checksum: Address,
@@ -15,6 +17,6 @@ pub enum Delta {
     Tip  {
         checksum: Address,
         previous: Address,
-        difference: Diff,
+        // difference: Diff,
     },
 }

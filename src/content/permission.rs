@@ -1,4 +1,7 @@
+use serde::{Serialize, Deserialize};
+
 /// A Permission refers to how Content is synced between Forks.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Permission {
     /// Fork can not access Content
     Restricted,
@@ -10,6 +13,7 @@ pub enum Permission {
 
 /// `Permissions` determines whether Content is synced between forks.
 /// This is veriefied through the use of a cryptographic proof log.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Permissions {
     key_perms: HashMap<Fork, Permission>,
     base_perm: Permission,

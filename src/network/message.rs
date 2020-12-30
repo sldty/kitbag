@@ -4,6 +4,7 @@
 // definitely something to look into in the future.
 
 /// Represents a `Message`, that should be encrypted, sent between `Node`s.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Message {
     // authenticate connection
     // Gday(Vec<>),

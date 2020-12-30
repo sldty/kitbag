@@ -53,14 +53,14 @@ impl<T> DiskMap<T> where T: Storable + Clone {
         })
     }
 
-    pub fn contains_key(&mut self, key: &str) -> bool {
+    pub fn contains_key(&self, key: &str) -> bool {
         return self.cache.contains_key(key);
     }
 
     /// Reads a value from the `DiskMap`.
     /// If the value is not cached in-memory,
     /// we load and cache it.
-    pub fn get(&self, key: &str) -> Result<T, String> {
+    pub fn get(&mut self, key: &str) -> Result<T, String> {
         match self.cache.get(key) {
             Some(Some(value)) => Ok(value.to_owned()),
             Some(None) => {
@@ -72,7 +72,7 @@ impl<T> DiskMap<T> where T: Storable + Clone {
                 let unserde: Box<T> = Storable::try_from_bytes(&bytes)
                     .ok_or("Could not deserialize value of key file")?;
 
-                self.insert(key, &unserde);
+                self.insert_temp(key, &unserde)?;
                 Ok(*unserde)
             },
             None => Err(String::from("Key is not on-hand")),

@@ -26,7 +26,7 @@ impl KeySpace {
         })
     }
 
-    pub fn contains_address(&self, identity: &Identity) -> bool {
+    pub fn contains_address(&mut self, identity: &Identity) -> bool {
         self.histories.contains_key(&hex(&identity.bytes()))
     }
 
@@ -34,9 +34,9 @@ impl KeySpace {
         self.histories.get(&hex(&identity.bytes()))
     }
 
-    pub fn insert(&mut self, content: &Content) -> Result<Identity, String> {
-        todo!()
-    }
+    // pub fn insert(&mut self, content: &Content) -> Result<Identity, String> {
+    //     todo!()
+    // }
 
     // new
     // contains_identity(Identity)
