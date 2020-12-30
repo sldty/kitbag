@@ -17,15 +17,15 @@ use crate::datastore::Storable;
 /// sha256 of: "git is nice"
 /// ```
 #[derive(Debug)]
-pub struct DiskKV<T> where T: Storable + Clone {
+pub struct DiskMap<A, B> where A: Clone, B: Storable + Clone {
     // The location of the datastore on-disk
     path: PathBuf,
     /// Recently accessed addresses for increased efficiency.
     /// Maps addresses to their serialized representation.
-    cache: HashMap<String, Option<T>>,
+    cache: HashMap<A, Option<B>>,
 }
 
-impl<T> DiskKV<T> where T: Storable + Clone {
+impl<A, B> DiskKV<A, B> where T: Storable + Clone {
     fn scan(path: &Path) -> Option<HashMap<String, Option<T>>> {
         let mut cache = HashMap::new();
 
@@ -49,18 +49,15 @@ impl<T> DiskKV<T> where T: Storable + Clone {
         })
     }
 
-    pub fn has(&mut self, key: &str) -> bool {
+    pub fn contains_key(&mut self, key: &A) -> bool {
         return self.cache.contains_key(key);
     }
 
-    pub fn load(&self, key: &str) -> Result<T, String> {
+    pub fn get(&self, key: &A) -> Result<T, String> {
         match self.cache.get(key) {
             Some(Some(value)) => Ok(value.to_owned()),
             Some(None) => {
-                let folder = &key[..2];
-                let name   = &key[2..];
-                let path   = self.path.join(folder).join(name);
-
+                let path   = self.path.join(key); // TODO: serialize?
                 let mut bytes = vec![];
                 let mut file = fs::File::open(path).or(Err("Could not open key file "))?;
                 file.read_to_end(&mut bytes).or(Err("Could not read key file"))?;
@@ -73,7 +70,7 @@ impl<T> DiskKV<T> where T: Storable + Clone {
         }
     }
 
-    pub fn store(&mut self, key: &str, value: &T) -> Result<(), String> {
+    pub fn insert(&mut self, key: &A, value: &B) -> Result<(), String> {
         let file = self.path.join(key);
         println!("{:?}", file.to_str());
         let mut file = fs::File::create(&file)
@@ -81,7 +78,13 @@ impl<T> DiskKV<T> where T: Storable + Clone {
 
         let bytes = Storable::try_to_bytes(value).ok_or("Could not serialize value of key")?;
         file.write_all(&bytes).or(Err("Could not write serialized value to key file"))?;
-        self.cache.insert(key.to_string(), Some(value.clone()));
+        self.insert_temp(key, value);
         Ok(())
+    }
+
+    /// Insert an item in the DiskMap that is redundant,
+    /// i.e. can be rebuilt from *different* data that is *gauranteed* to exist.
+    pub fn insert_temp(&mut self, key: &A, value: &B) -> Result<(), String> {
+        self.cache.insert(key.to_string(), Some(value.clone()))
     }
 }

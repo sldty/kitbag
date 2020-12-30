@@ -7,7 +7,7 @@ use crate::{
 /// A Location is a chain of identities leading to an identity
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Location {
-    key:         KeyPublic,
-    identity:    Identity,
-    version:     Option<Address>,
+    key_public: KeyPublic,
+    identity:   Identity,
+    version:    Address,
 }
