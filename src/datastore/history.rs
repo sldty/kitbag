@@ -1,60 +1,37 @@
-use serde::{Serialize, Deserialize};
-
-use std::collections::HashMap;
-
-use crate::{
-    handle::Address,
-    content::Content,
-    datastore::{Cache, Storable, Delta},
+use std::{
+    path::Path,
+    collections::HashMap,
 };
+use serde::{Serialize, Deserialize};
+use crate::Address;
 
-/// Represents a single chain of versions.
-#[derive(Debug, Serialize, Deserialize)]
+/// Represents a series of versions of some Content over time,
+/// Within the context of a fork, of course.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct History {
-    /// The Address of the latest Delta.
-    pub head: Address,
-    /// Maps Content addresses to the Delta that is used to make that address.
-    deltas: HashMap<Address, Delta>,
-}
-
-impl Clone for History {
-    fn clone(&self) -> History {
-        // please don't kill me
-        // TODO: actually clone it better
-        *Storable::try_from_bytes(&Storable::try_to_bytes(self).unwrap()).unwrap()
-    }
+    // The address of the latest version
+    head: Address,
+    // Maps a content `Address` -> delta `Address`
+    map:  HashMap<Address, Address>,
 }
 
 impl History {
-    /// Create a new history.
-    pub fn new(initial: Content) -> Option<History> {
-        let address = Address::new(&Storable::try_to_bytes(&initial)?);
-        let delta = Delta::base(initial)?;
-
-        let mut deltas = HashMap::new();
-        deltas.insert(address.clone(), delta);
-
-        return Some(History { head: address, deltas });
+    pub fn new() -> Result<History, String> {
+        Ok(History {
+            head: todo!(),
+            map:  HashMap::new(),
+        })
     }
 
-    /// Commit a delta onto the head history.
-    /// Returns None if the delta can not be applied,
-    /// Panics if it is passed a base delta, which should be unreachable.
-    pub fn commit(&mut self, previous: &Content, next: &Content) -> Option<()> {
-        let delta = Delta::make(previous, next)?;
+    pub fn head(&self) -> Address { self.head.clone() }
 
-        let address = if let Delta::Tip { previous, checksum, .. } = &delta {
-            if previous != &self.head { return None; }
-            checksum.clone()
-        } else { unreachable!() };
-
-        self.deltas.insert(address.clone(), delta);
-        self.head = address;
-        return Some(());
+    pub fn contains_address(&self, address: &Address) -> bool {
+        self.map.contains_key(address)
     }
 
-    pub fn delta(&self, address: &Address) -> Option<&Delta> {
-        let delta = self.deltas.get(address)?;
-        return Some(delta);
-    }
+
+    // head()
+    // contains_address(Address)
+    // get(Address)
+    // insert(Content)
 }

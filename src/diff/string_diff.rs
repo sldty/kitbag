@@ -1,8 +1,13 @@
+use serde::{Serialize, Deserialize};
 use crate::diff::{Diffable, VecDiff};
 
-pub struct Chars(String);
-pub struct Words(String);
+// pub struct Chars(String);
+// pub struct Words(String);
 
+/// Represents a `String`, grouped into lines (by `'\n'`).
+/// Useful for when you want to take a courser
+/// difference between two `String`s.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Lines(String);
 
 impl Lines {

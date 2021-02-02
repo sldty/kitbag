@@ -1,12 +1,20 @@
+use sha3::{Digest, Sha3_256};
 use serde::{Serialize, Deserialize};
-use crate::content::Content;
-use crate::handle::Tag;
 
-/// An address is the immutable handle of a specific version of an entity.
+// TODO: fixed size?
+/// An `Address` is the immutable hash of some `Data`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Address(Tag);
+pub struct Address(Vec<u8>);
 
 impl Address {
-    pub fn new(content: &[u8]) -> Address { Address(Tag::hash(content)) }
-    pub fn tag(&self) -> Tag { self.0.clone() }
+    pub fn new(content: &[u8]) -> Address {
+        let mut hasher = Sha3_256::new();
+        hasher.update(content);
+        let result = hasher.finalize();
+        Address(result.to_vec())
+    }
+
+    pub fn bytes(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
 }
