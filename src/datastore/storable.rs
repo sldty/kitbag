@@ -18,6 +18,6 @@ impl<T> Storable for T where T: Serialize + DeserializeOwned {
     }
 
     fn try_from_bytes(bytes: &[u8]) -> Option<Box<T>> {
-        rmp_serde::from_slice(bytes).ok()
+        rmp_serde::from_read_ref(bytes).ok()
     }
 }

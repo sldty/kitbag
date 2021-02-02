@@ -1,4 +1,6 @@
 use serde::{Serialize, Deserialize};
+use crate::{handle::Fork, data::Data};
+use super::permission::Permissions;
 
 /// `Content` refers to some `Data` at a specific version
 /// within the context of a `Fork`.
