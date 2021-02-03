@@ -90,7 +90,7 @@ impl<T> DiskMap<T> where T: Storable + Clone {
         let bytes = Storable::try_to_bytes(value).ok_or("Could not serialize value of key")?;
         file.write_all(&bytes).or(Err("Could not write serialized value to key file"))?;
 
-        self.insert_temp(key, value);
+        self.insert_temp(key, value)?;
         Ok(())
     }
 

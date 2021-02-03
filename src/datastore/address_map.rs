@@ -30,7 +30,7 @@ impl AddressMap {
     pub fn insert(&mut self, data: &Data) -> Result<Address, String> {
         let serialized = Storable::try_to_bytes(data).ok_or("Could not serialize data")?;
         let address = Address::new(&serialized);
-        self.contents.insert(&hex(&address.bytes()), data);
+        self.contents.insert(&hex(&address.bytes()), data)?;
         return Ok(address);
     }
 }

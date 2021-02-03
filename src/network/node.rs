@@ -1,12 +1,12 @@
 use std::{
     io::{Read, Write},
-    net::{TcpStream, TcpListener, SocketAddr},
+    net::{TcpStream, TcpListener, SocketAddr, Shutdown},
     collections::HashSet,
 };
 use crate::{
     keys::KeyPair,
     handle::Address,
-    network::{Peer, Associate, Message},
+    network::{Peer, Associate, Message, Payload},
 };
 
 /// A `Node` is a local participant of the network we have control over.
@@ -62,17 +62,14 @@ impl Node {
         // Handshake
 
         // Send public key
-        let key_public_send = Message::Gday(self.temp_key.public_bytes());
-        Node::send_message(&mut stream, &key_public_send);
+        let key_public_send = Payload::Gday(self.temp_key.public_bytes());
+        stream.write(&rmp_serde::to_vec(&key_public_send).ok()?).ok()?;
 
         // get public key and check that it matches
-        let key_public_recv = match Node::next_message(&stream)? {
-            Message::Gday(key) if key == associate.public_key => key,
-            _ => return None,
+        let key_public_recv = match rmp_serde::from_read(&stream).ok()? {
+            Payload::Gday(key) if key == associate.public_key => key,
+            _ => { return None; },
         };
-
-        // generate shared secret
-        let shared_secret = self.temp_key.shared_secret(&key_public_recv)?;
 
         // construct peer
         let peer = Peer {

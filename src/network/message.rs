@@ -33,7 +33,7 @@ pub enum Message {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Payload {
-    KeyGday(KeyPublic),
+    Gday(KeyPublic),
     Encrypted {
         nonce:     [u8; 12],
         encrypted: Vec<u8>,
