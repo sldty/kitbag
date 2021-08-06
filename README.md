@@ -80,6 +80,8 @@ How do we ensure that:
 
 When any content is queried, from the datastore, the datastore tries to automatically and efficiently merge all non-local branches into your branch. If no conflicts arise, this merge is recorded and the change is propagated to peers, which then may automatically merge given no further conflicts.
 
+> Moving to a [CRDT-based backing store](https://slightknack.dev/blog/backing-crdt-store/), which eliminates merge conflicts. See [Together](https://github.com/slightknack/together). The following two paragraphs no longer apply:
+
 If conflicts do arise, then they are returned when the document is queried. These conflicts will be presented to agents along with the rest of the document, who can then can easily resolve such conflicts by selecting 'use mine' or 'use theirs' or 'use both' and so on. Note this this merging is done in an automatic and incremental manner, so agents collaborating on a document can see merge conflicts arise in real-time as they occur. Humans are usually pretty good at collaborating over a fast network connection - where merging really shines is when you're offline for a long period of time.
 
 If this is the case, once you are back online, collaborating branches will be downloaded and non-conflicting merges will be applied. The unresolved merges will be highlighted, which can then easily be resolved as discussed above.
